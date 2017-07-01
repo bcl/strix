@@ -14,9 +14,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import os
 import re
+import time
+import threading
 
 import strix.cmdline
+import strix.queue
 import motion.config
 
 ## Check the motion args
@@ -93,3 +97,30 @@ def run():
             print("ERROR: %s" % e)
         list(map(p_e, errors))
         return False
+
+    queue_path = os.path.abspath(os.path.join(base_dir, "queue/"))
+    if not os.path.exists(queue_path):
+        print("ERROR: %s does not exist. Is motion running?" % queue_path)
+        return False
+    queue_quit = threading.Event()
+    queue_thread = threading.Thread(name="queue-thread",
+                                    target=strix.queue.monitor_queue,
+                                    args=(queue_path,queue_quit))
+    queue_thread.start()
+
+    try:
+        while True:
+            time.sleep(10)
+    except Exception as e:
+        print("ERROR: %s" % e)
+    except KeyboardInterrupt:
+        print("Exiting due to ^C")
+
+    # Tell the threads to quit
+    for t in [queue_quit]:
+        t.set()
+
+    # Wait until everything is done
+    print("Waiting for threads to quit")
+    for t in [queue_thread]:
+        t.join()
