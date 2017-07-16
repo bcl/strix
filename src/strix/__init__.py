@@ -21,7 +21,7 @@ import threading
 
 import strix.cmdline
 import strix.queue
-import motion.config
+import strix.motion as motion
 
 ## Check the motion args
 ## Start the queue watcher thread
