@@ -25,7 +25,7 @@ def parser():
 
     required = parser.add_argument_group("required arguments")
     required.add_argument("-c", "--config",
-                          help="Path to Motion config files",
+                          help="Path to motion.conf",
                           required=True, metavar="MOTION")
 
     # optional arguments
