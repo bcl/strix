@@ -19,24 +19,25 @@ import re
 import time
 import threading
 
-import strix.cmdline
-import strix.queue
-import strix.motion as motion
+from . import cmdline
+from . import queue
+from . import motion
 
 ## Check the motion args
 ## Start the queue watcher thread
 ## Start the bottle/API thread
 ## Wait for a signal to shutdown
 
+from typing import List, Match, Tuple
 
-def check_motion_config(config_path):
+def check_motion_config(config_path: str) -> Tuple[str, List[str]]:
     """ Check the config file to make sure the settings match what Strix needs.
     """
     picture_filename = "%Y-%m-%d/%v/%H-%M-%S-%q"
     on_event_end_re = r".*touch (.*)/queue/Camera%t_%Y-%m-%d_%v"
     target_dir_re = r"(.*)/Camera\d+"
 
-    errors = []
+    errors = [] # type: List[str]
     base_target_dir = ""
     base_queue_dir = ""
     found_pf = False
@@ -46,24 +47,24 @@ def check_motion_config(config_path):
     # If there are threads, check their settings instead
     for c in [cfg.config] + \
              [cfg.thread[cc] for cc in filter(lambda k: k.startswith("thread"), cfg.config.keys())]:
-        if c.get("picture_filename") == picture_filename:
+        if c.get("picture_filename", "") == picture_filename:
             found_pf = True
-        if c.get("on_event_end"):
-            m = re.match(on_event_end_re, c.get("on_event_end"))
-            if not m:
-                continue
-            if not m.groups():
+
+        on_event_end = c.get("on_event_end", "")
+        if on_event_end:
+            m = re.match(on_event_end_re, on_event_end) # type: Match[str]
+            if not m or not m.groups():
                 continue
             # Above errors will be caught by not having base_queue_dir set.
             if not base_queue_dir:
                 base_queue_dir = m.group(1)
             elif base_queue_dir != m.group(1):
                 errors += ["All of the paths in on_event_end MUST match."]
-        if c.get("target_dir"):
-            m = re.match(target_dir_re, c.get("target_dir"))
-            if not m:
-                continue
-            if not m.groups():
+
+        target_dir = c.get("target_dir", "")
+        if target_dir:
+            m = re.match(target_dir_re, target_dir)
+            if not m or not m.groups():
                 continue
             # Above errors will be caught by not having base_target_dir set.
             if not base_target_dir:
@@ -83,17 +84,17 @@ def check_motion_config(config_path):
     return (base_target_dir, errors)
 
 
-def run():
-    parser = strix.cmdline.parser()
+def run() -> bool:
+    parser = cmdline.parser()
     opts = parser.parse_args()
 
     try:
         (base_dir, errors) = check_motion_config(opts.config)
     except Exception as e:
-        errors = [e]
+        errors = [str(e)]
 
     if errors:
-        def p_e(e):
+        def p_e(e: str) -> None:
             print("ERROR: %s" % e)
         list(map(p_e, errors))
         return False
@@ -104,7 +105,7 @@ def run():
         return False
     queue_quit = threading.Event()
     queue_thread = threading.Thread(name="queue-thread",
-                                    target=strix.queue.monitor_queue,
+                                    target=queue.monitor_queue,
                                     args=(queue_path,queue_quit))
     queue_thread.start()
 
@@ -117,10 +118,12 @@ def run():
         print("Exiting due to ^C")
 
     # Tell the threads to quit
-    for t in [queue_quit]:
-        t.set()
+    for event in [queue_quit]:
+        event.set()
 
     # Wait until everything is done
     print("Waiting for threads to quit")
-    for t in [queue_thread]:
-        t.join()
+    for thread in [queue_thread]:
+        thread.join()
+
+    return True

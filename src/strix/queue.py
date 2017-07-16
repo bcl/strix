@@ -15,13 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from glob import glob
+import multiprocessing as mp
 import os
 import time
-import multiprocessing as mp
+import threading
+
+from typing import List
 
 ## Handle watching the queue and dispatching movie creation and directory moving
 
-def process_event(event):
+def process_event(event: str) -> None:
     print("Processing %s" % event)
 
     # Convert event to a path, replace _ with /
@@ -32,8 +35,8 @@ def process_event(event):
     # Create a thumbnail
     # Move the directory to its final location
 
-def monitor_queue(queue_path, quit):
-    threads = []
+def monitor_queue(queue_path: str, quit: threading.Event) -> None:
+    threads = [] # type: List[mp.Process]
 
     while not quit.is_set():
         time.sleep(5)

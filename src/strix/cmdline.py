@@ -18,7 +18,7 @@ import argparse
 
 version = "DEVEL"
 
-def parser():
+def parser() -> argparse.ArgumentParser:
     """ Return the ArgumentParser"""
 
     parser = argparse.ArgumentParser(description="Motion Camera Web Interface")

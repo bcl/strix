@@ -17,5 +17,5 @@
 import threading
 from bottle import route, run
 
-class Api(threading.Threading):
+class Api(threading.Thread):
     pass
