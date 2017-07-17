@@ -6,3 +6,4 @@ venv
 .tox/
 TODO
 strix.egg-info/
+.coverage
