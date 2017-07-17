@@ -106,7 +106,7 @@ def run() -> bool:
     queue_quit = threading.Event()
     queue_thread = threading.Thread(name="queue-thread",
                                     target=queue.monitor_queue,
-                                    args=(queue_path,queue_quit))
+                                    args=(base_dir,queue_quit))
     queue_thread.start()
 
     try:
