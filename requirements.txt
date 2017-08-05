@@ -1,4 +1,5 @@
-mypy
-pytest
 bottle
+mypy
 Pillow
+pytest
+structlog

@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import multiprocessing as mp
 import os
 import re
 import time
@@ -21,6 +22,7 @@ import threading
 
 from . import cmdline
 from . import queue
+from . import logger
 from . import motion
 
 ## Check the motion args
@@ -99,6 +101,16 @@ def run() -> bool:
         list(map(p_e, errors))
         return False
 
+    # Start logging thread
+    logging_queue = mp.Queue()
+    logging_quit = threading.Event()
+    logging_thread = threading.Thread(name="logging-thread",
+                                      target=logger.listener,
+                                      args=(logging_queue, logging_quit, opts.log))
+    logging_thread.start()
+    running_threads = [(logging_thread, logging_quit)]
+
+    # Start queue monitor and processing thread (starts its own Multiprocessing threads)
     queue_path = os.path.abspath(os.path.join(base_dir, "queue/"))
     if not os.path.exists(queue_path):
         print("ERROR: %s does not exist. Is motion running?" % queue_path)
@@ -106,9 +118,14 @@ def run() -> bool:
     queue_quit = threading.Event()
     queue_thread = threading.Thread(name="queue-thread",
                                     target=queue.monitor_queue,
-                                    args=(base_dir,queue_quit))
+                                    args=(logging_queue, base_dir, queue_quit))
     queue_thread.start()
+    running_threads += [(queue_thread, queue_quit)]
 
+    # Start API thread (may start its own threads to handle requests)
+    # TODO
+
+    # Wait until it is told to exit
     try:
         while True:
             time.sleep(10)
@@ -118,12 +135,12 @@ def run() -> bool:
         print("Exiting due to ^C")
 
     # Tell the threads to quit
-    for event in [queue_quit]:
+    for _thread, event in running_threads:
         event.set()
 
     # Wait until everything is done
     print("Waiting for threads to quit")
-    for thread in [queue_thread]:
+    for thread, _event in running_threads:
         thread.join()
 
     return True
