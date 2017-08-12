@@ -45,14 +45,14 @@ def listener(queue: mp.Queue, stop_event: threading.Event, log_path: str) -> Non
     handler = RotatingFileHandler(log_path, maxBytes=100*1024**2, backupCount=10)
     formatter = logging.Formatter('%(message)s')
     handler.setFormatter(formatter)
-    queue_listener = QueueListener(queue, handler)     # type: ignore
+    queue_listener = QueueListener(queue, handler)
     queue_listener.start()
     stop_event.wait()
     queue_listener.stop()
 
 
 def log(queue: mp.Queue) -> structlog.BoundLogger:
-    handler = QueueHandler(queue)      # type: ignore
+    handler = QueueHandler(queue)
     root = structlog.get_logger()
     root.addHandler(handler)
     root.setLevel(logging.DEBUG)

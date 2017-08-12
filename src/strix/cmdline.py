@@ -45,6 +45,9 @@ def parser() -> argparse.ArgumentParser:
                           help="Path to logfile (/var/tmp/strix.log)",
                           metavar="LOGFILE",
                           default="/var/tmp/strix.log")
+    optional.add_argument("--debug",
+                          help="Output debug information",
+                          action="store_true", default=False)
 
     # add the show version option
     parser.add_argument("-V", help="show program's version number and exit",

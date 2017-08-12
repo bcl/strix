@@ -1,0 +1,44 @@
+body {
+    width: 100%;
+}
+
+.live-feeds {
+}
+
+.feed {
+    float: left;
+    width: 49%;
+}
+
+td.prev,td.next {
+    background: white;
+    border: 1px solid;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+td.prev:hover,td.next:hover {
+    background: lightgrey;
+}
+
+.feed table {
+    border-spacing: 0px;
+}
+
+img.thumbnail {
+    width: 20%;
+    display: block;
+    float: left;
+}
+
+img.thumbnail:hover {
+    transform: scale(2.0);
+}
+
+img.feed-src {
+    width: 100%;
+    display: block;
+}
+
+.controls {
+}

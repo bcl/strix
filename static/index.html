@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Strix - Motion Camera UI</title>
+    <link href="/style.css" rel="stylesheet" type="text/css" />
+</head>
+<script type="text/javascript">
+function set_feed_href() {
+    const feeds = Array.from(document.querySelectorAll(".feed-href"));
+    feeds.forEach(feed => {
+        feed.href = "//" + location.hostname + ":" + feed.attributes["data-port"].value;
+    });
+}
+
+function set_feed_src() {
+    const feeds = Array.from(document.querySelectorAll(".feed-src"));
+    feeds.forEach(feed => {
+        feed.src = "//" + location.hostname + ":" + feed.attributes["data-port"].value;
+    });
+}
+
+function nice_time_string(time_str) {
+    var d = new Date(time_str);
+    // DoW Mo Day Year
+    var fields = d.toDateString().split(" ");
+    return fields.slice(0,3).join(" ") + " " + d.toLocaleTimeString();
+}
+
+function get_events(camera_name, offset, limit) {
+    // The API returns the events with the oldest one first in the .events list
+    fetch("/api/events/"+camera_name+"?offset="+offset+"&limit="+limit)
+        .then(resp => resp.json())
+        .then(data => {
+            const camera_div = document.querySelector("div#"+camera_name+" td.thumbnails");
+            console.log(data);
+            const html = data.events[camera_name].map(event => {
+                var start = nice_time_string(event.start);
+                return `<a href="/${event.video}" class="video" title="${start}" target="video"><img class="thumbnail" src="/${event.thumbnail}" /></a>`;
+            }).join("");
+            camera_div.innerHTML = html;
+        });
+}
+
+function prev_events(e) {
+    // e.target.offsetParent.ParentNode.id has the CameraX class
+    // Not too sure how reliable that is...
+    let camera_name = e.target.offsetParent.parentNode.id;
+    console.log("Clicked Prev for "+camera_name);
+    event_offsets.set(camera_name, event_offsets.get(camera_name) + 5);
+    console.log(camera_name+" offset is "+event_offsets.get(camera_name));
+    get_events(camera_name, event_offsets.get(camera_name), 5);
+
+}
+
+function next_events(e) {
+    let camera_name = e.target.offsetParent.parentNode.id;
+    console.log("Clicked Next for "+camera_name);
+    if(event_offsets.get(camera_name) >=5) {
+        event_offsets.set(camera_name, event_offsets.get(camera_name) - 5);
+    } else {
+        event_offsets.set(camera_name, 0);
+    }
+    console.log(camera_name+" offset is "+event_offsets.get(camera_name));
+    get_events(camera_name, event_offsets.get(camera_name), 5);
+}
+
+function setup_page() {
+    // Camera information will eventually be filled in by an api call
+    // And then the page will be populated.
+    cameras = [["Camera1", 8081], ["Camera2", 8082], ["Camera3", 8083], ["Camera4", 8084]];
+    event_offsets = new Map();
+
+    // Setup the camera HTML
+    const live_feeds = document.querySelector("div#live-feeds");
+    const html = cameras.map(camera => {
+        const camera_name = camera[0];
+        const port = camera[1];
+        return `<div class="feed" id="${camera_name}">
+            <table>
+            <tr><a href="" class="feed-href" data-port="${port}"><img src="" class="feed-src" data-port="${port}"></a></tr>
+            <tr class="controls"><td class="prev">&lt</td><td class="thumbnails"></td><td class="next">&gt</td></tr>
+            </table>
+            </div>`;
+    }).join("\n");
+    console.log(html)
+    live_feeds.innerHTML = html;
+
+    set_feed_href();
+    set_feed_src();
+
+    const prev_buttons = Array.from(document.querySelectorAll(".prev"));
+    prev_buttons.forEach(button => button.addEventListener("click", prev_events));
+    const next_buttons = Array.from(document.querySelectorAll(".next"));
+    next_buttons.forEach(button => button.addEventListener("click", next_events));
+
+    // Grab the initial events for each camera
+    cameras.map(camera => {
+        const camera_name = camera[0];
+        const port = camera[1];
+        event_offsets.set(camera_name, 0);
+        get_events(camera_name, 0, 5);
+    });
+}
+</script>
+<body onload="setup_page();">
+<div id="live-feeds">
+</div>
+</body>
+</html>

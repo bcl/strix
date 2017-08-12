@@ -20,6 +20,7 @@ import re
 import time
 import threading
 
+from . import api
 from . import cmdline
 from . import queue
 from . import logger
@@ -30,7 +31,7 @@ from . import motion
 ## Start the bottle/API thread
 ## Wait for a signal to shutdown
 
-from typing import List, Match, Tuple
+from typing import List, Match, Tuple, Any
 
 def check_motion_config(config_path: str) -> Tuple[str, List[str]]:
     """ Check the config file to make sure the settings match what Strix needs.
@@ -102,7 +103,7 @@ def run() -> bool:
         return False
 
     # Start logging thread
-    logging_queue = mp.Queue()
+    logging_queue = mp.Queue()      # type: mp.Queue[List[Any]]
     logging_quit = threading.Event()
     logging_thread = threading.Thread(name="logging-thread",
                                       target=logger.listener,
@@ -123,7 +124,12 @@ def run() -> bool:
     running_threads += [(queue_thread, queue_quit)]
 
     # Start API thread (may start its own threads to handle requests)
-    # TODO
+    api_quit = threading.Event()
+    api_thread = threading.Thread(name="api-thread",
+                                  target=api.run_api,
+                                  args=(logging_queue, base_dir, opts.host, opts.port, opts.debug))
+    api_thread.start()
+    running_threads += [(api_thread, api_quit)]
 
     # Wait until it is told to exit
     try:
