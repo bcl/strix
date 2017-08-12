@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from datetime import datetime
 import multiprocessing as mp
+import os
 import threading
 
 from bottle import route, run, static_file, request, Response
@@ -34,7 +35,7 @@ def run_api(logging_queue: mp.Queue, base_dir: str, host: str, port: int, debug:
     @route('/')
     @route('/<filename>')
     def serve_root(filename: str = "index.html") -> Response:
-        return static_file(filename, root="./static")
+        return static_file(filename, root=os.path.dirname(__file__)+"/ui")
 
     @route('/motion/<filepath:path>')
     def serve_motion(filepath: str) -> Response:

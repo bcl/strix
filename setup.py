@@ -25,6 +25,8 @@ setup(
     name="strix",
     version="0.0.1",
     packages=find_packages(),
+    package_dir = {"strix": "src/strix"},
+    package_data = {"strix": ["ui/*"]},
     setup_requires=['nose>=1.0', 'setuptools-lint'],
     tests_require=['tox', 'coverage', 'nose', 'pylint'],
     cmdclass={'test': Tox},
@@ -32,7 +34,7 @@ setup(
     author="Brian Lane",
     author_email="bcl@brianlane.com",
     description="A Motion Camera API Server and UI",
-    license="NeedToDecide",
+    license="GPLv2",
     keywords="motion security camera strix",
     url="https://www.brianlane.com/software/strix.html"
 )
