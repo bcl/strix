@@ -118,7 +118,7 @@ def camera_events(log: structlog.BoundLogger, base_dir: str, camera: str,
         events.insert(0, event_details(log, event_path))
 
         added += 1
-        if added > limit:
+        if added >= limit:
             break
 
     return events
