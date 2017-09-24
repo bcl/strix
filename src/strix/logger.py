@@ -18,7 +18,6 @@ import sys
 import logging
 from logging.handlers import RotatingFileHandler, QueueListener, QueueHandler
 import multiprocessing as mp
-import threading
 
 import structlog
 
@@ -41,7 +40,7 @@ structlog.configure(
     cache_logger_on_first_use=True,
 )
 
-def listener(queue: mp.Queue, stop_event: threading.Event, log_path: str) -> None:
+def listener(queue: mp.Queue, stop_event: mp.Event, log_path: str) -> None:
     handler = RotatingFileHandler(log_path, maxBytes=100*1024**2, backupCount=10)
     formatter = logging.Formatter('%(message)s')
     handler.setFormatter(formatter)

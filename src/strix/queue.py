@@ -20,7 +20,6 @@ import os
 import shutil
 import subprocess
 import time
-import threading
 
 from PIL import Image
 import structlog
@@ -96,7 +95,7 @@ def process_event(log: structlog.BoundLogger, base_dir: str, event: str) -> None
     except Exception as e:
         log.error("Moving to destination failed", event_path=event_path, exception=str(e))
 
-def monitor_queue(logging_queue: mp.Queue, base_dir: str, quit: threading.Event) -> None:
+def monitor_queue(logging_queue: mp.Queue, base_dir: str, quit: mp.Event) -> None:
     threads = [] # type: List[mp.Process]
     log = logger.log(logging_queue)
 

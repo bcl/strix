@@ -18,7 +18,6 @@ import multiprocessing as mp
 import os
 import re
 import time
-import threading
 
 from . import api
 from . import cmdline
@@ -104,10 +103,10 @@ def run() -> bool:
 
     # Start logging thread
     logging_queue = mp.Queue()      # type: mp.Queue[List[Any]]
-    logging_quit = threading.Event()
-    logging_thread = threading.Thread(name="logging-thread",
-                                      target=logger.listener,
-                                      args=(logging_queue, logging_quit, opts.log))
+    logging_quit = mp.Event()       # type: mp.Event
+    logging_thread = mp.Process(name="logging-thread",
+                                target=logger.listener,
+                                args=(logging_queue, logging_quit, opts.log))
     logging_thread.start()
     running_threads = [(logging_thread, logging_quit)]
 
@@ -116,18 +115,18 @@ def run() -> bool:
     if not os.path.exists(queue_path):
         print("ERROR: %s does not exist. Is motion running?" % queue_path)
         return False
-    queue_quit = threading.Event()
-    queue_thread = threading.Thread(name="queue-thread",
-                                    target=queue.monitor_queue,
-                                    args=(logging_queue, base_dir, queue_quit))
+    queue_quit = mp.Event()
+    queue_thread = mp.Process(name="queue-thread",
+                              target=queue.monitor_queue,
+                              args=(logging_queue, base_dir, queue_quit))
     queue_thread.start()
     running_threads += [(queue_thread, queue_quit)]
 
     # Start API thread (may start its own threads to handle requests)
-    api_quit = threading.Event()
-    api_thread = threading.Thread(name="api-thread",
-                                  target=api.run_api,
-                                  args=(logging_queue, base_dir, opts.host, opts.port, opts.debug))
+    api_quit = mp.Event()
+    api_thread = mp.Process(name="api-thread",
+                            target=api.run_api,
+                            args=(logging_queue, base_dir, opts.host, opts.port, opts.debug))
     api_thread.start()
     running_threads += [(api_thread, api_quit)]
 

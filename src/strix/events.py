@@ -41,7 +41,7 @@ def image_to_dt(event_date: str, image: str) -> datetime:
 
 
 def event_details(log: structlog.BoundLogger, event_path: str) -> Dict:
-    log.info("event_details", path=event_path)
+#    log.info("event_details", path=event_path)
     (camera_name, event_date, event_time) = event_path.rsplit("/", 3)[-3:]
 
     # Grab the camera, date, and time and build the URL path
@@ -85,8 +85,8 @@ def event_details(log: structlog.BoundLogger, event_path: str) -> Dict:
 
     is_saved = os.path.exists(event_path+"/.saved")
 
-    log.debug("event_details", thumbnail=thumbnail, start_time=str(start_time), end_time=str(end_time),
-              video=video, debug_video=debug_video, saved=is_saved)
+#    log.debug("event_details", thumbnail=thumbnail, start_time=str(start_time), end_time=str(end_time),
+#              video=video, debug_video=debug_video, saved=is_saved)
 
     return {
         "start":        str(start_time),

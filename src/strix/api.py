@@ -14,10 +14,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+from gevent import monkey; monkey.patch_all()
 from datetime import datetime
 import multiprocessing as mp
 import os
-import threading
 
 from bottle import route, run, static_file, request, Response
 
@@ -48,17 +48,17 @@ def run_api(logging_queue: mp.Queue, base_dir: str, host: str, port: int, debug:
         offset= int(request.query.get("offset", "0"))
         limit = int(request.query.get("limit", "10"))
         camera_list = cameras.split(",")
-        log.debug("serve_events", camera_list=camera_list, start=str(start), end=str(end), offset=offset, limit=limit)
+#        log.debug("serve_events", camera_list=camera_list, start=str(start), end=str(end), offset=offset, limit=limit)
 
         events = {}
         for camera in camera_list:
             events[camera] = camera_events(log, base_dir, camera, start, end, offset, limit)
 
-        log.debug("serve_events", events=events)
+#        log.debug("serve_events", events=events)
         return {"start":    str(start),
                 "end":      str(end),
                 "offset":   offset,
                 "limit":    limit,
                 "events":   events}
 
-    run(host=host, port=port, debug=debug)
+    run(host=host, port=port, debug=debug, server="gevent")
