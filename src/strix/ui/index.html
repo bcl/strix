@@ -39,7 +39,9 @@ function get_events(camera_name, offset, limit) {
                 var start = nice_time_string(event.start);
                 return `<a href="/${event.video}" class="video" title="${start}" target="video"><img class="thumbnail" src="/${event.thumbnail}" /></a>`;
             }).join("");
-            camera_div.innerHTML = html;
+            new_div = document.createElement("div");
+            new_div.innerHTML = html;
+            camera_div.replaceChild(new_div, camera_div.childNodes[0]);
         });
 }
 
@@ -80,7 +82,7 @@ function setup_page() {
         return `<div class="feed" id="${camera_name}">
             <table>
             <tr><a href="" class="feed-href" data-port="${port}"><img src="" class="feed-src" data-port="${port}"></a></tr>
-            <tr class="controls"><td class="prev">&lt</td><td class="thumbnails"></td><td class="next">&gt</td></tr>
+            <tr class="controls"><td class="prev">&lt</td><td class="thumbnails"><div /></td><td class="next">&gt</td></tr>
             </table>
             </div>`;
     }).join("\n");
