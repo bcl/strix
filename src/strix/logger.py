@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import sys
 import logging
-from logging.handlers import RotatingFileHandler, QueueListener, QueueHandler
+from logging.handlers import RotatingFileHandler, QueueHandler
 import multiprocessing as mp
 
 import structlog
@@ -44,11 +44,21 @@ def listener(queue: mp.Queue, stop_event: mp.Event, log_path: str) -> None:
     handler = RotatingFileHandler(log_path, maxBytes=100*1024**2, backupCount=10)
     formatter = logging.Formatter('%(message)s')
     handler.setFormatter(formatter)
-    queue_listener = QueueListener(queue, handler)
-    queue_listener.start()
-    stop_event.wait()
-    queue_listener.stop()
+    logger = logging.getLogger()
+    logger.addHandler(handler)
 
+    # XXX QueueListener doesn't work for me, do it manually
+    while not stop_event.is_set():
+        try:
+            record = queue.get()
+            if record is None: # We send this as a sentinel to tell the listener to quit.
+                break
+            logger.handle(record) # No level or filter logic applied - just do it!
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            import sys, traceback
+            traceback.print_exc(file=sys.stderr)
 
 def log(queue: mp.Queue) -> structlog.BoundLogger:
     handler = QueueHandler(queue)
