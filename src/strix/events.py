@@ -57,7 +57,7 @@ def event_details(log: structlog.BoundLogger, event_path: str) -> Dict:
     if os.path.exists(event_path+"/thumbnail.jpg"):
         thumbnail = url+"/thumbnail.jpg"
     elif images:
-        thumbnail = images[len(images)//2]
+        thumbnail = images[len(images)//4]
     else:
         thumbnail = "images/missing.jpg"
 

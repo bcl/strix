@@ -70,12 +70,12 @@ def process_event(log: structlog.BoundLogger, base_dir: str, event: str) -> None
     except Exception as e:
         log.error("Failed to create debug video", exception=str(e))
 
-    # Create a thumbnail of the middle image of the capture, on the theory that it
-    # has the best chance of being 'interesting'.
+    # Create a thumbnail of the 25% image of the capture, on the theory that it
+    # has the best chance of being 'interesting' since it is near the trigger point
     try:
         images = sorted(list(glob(os.path.join(event_path, "*.jpg"))))
-        middle = images[int(len(images)/2)]
-        im = Image.open(middle)
+        idx = images[int(len(images)//4)]
+        im = Image.open(idx)
         # im.size will get the actual size of the image
         im.thumbnail(THUMBNAIL_SIZE)
         im.save(os.path.join(event_path, "thumbnail.jpg"), "JPEG")
