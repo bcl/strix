@@ -14,7 +14,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import sys
 import logging
 from logging.handlers import RotatingFileHandler, QueueHandler
 import multiprocessing as mp
@@ -54,6 +53,7 @@ def listener(queue: mp.Queue, stop_event: mp.Event, log_path: str) -> None:
             if record is None: # We send this as a sentinel to tell the listener to quit.
                 break
             logger.handle(record) # No level or filter logic applied - just do it!
+            queue.task_done()
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
