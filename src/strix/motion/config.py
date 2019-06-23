@@ -43,8 +43,8 @@ class MotionConfig():
         try:
             k, v = s.strip().split(" ", 1)
 
-            # thread is a special case, can be more than 1
-            if k == "thread":
+            # thread|camera is a special case, can be more than 1
+            if k == "thread" or k == "camera":
                 k = self.thread_n()
         except ValueError:
             k = s
@@ -64,7 +64,7 @@ class MotionConfig():
 
     def __init__(self, config_path: str) -> None:
         self.config = self.parse(config_path)
-        for t in filter(lambda k: k.startswith("thread"), self.config.keys()):
+        for t in filter(lambda k: k.startswith("thread") or k.startswith("camera"), self.config.keys()):
             thread_path = self.config[t]
             if not thread_path.startswith("/"):
                 # Turn the relative path into an absolute one using the config_path
