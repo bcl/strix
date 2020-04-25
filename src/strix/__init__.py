@@ -102,8 +102,8 @@ def run() -> bool:
         return False
 
     # Start logging thread
-    logging_queue = mp.Queue()      # type: mp.Queue[List[Any]]
-    logging_quit = mp.Event()       # type: mp.Event
+    logging_queue = mp.JoinableQueue()  # type: mp.JoinableQueue[List[Any]]
+    logging_quit = mp.Event()           # type: mp.Event
     logging_thread = mp.Process(name="logging-thread",
                                 target=logger.listener,
                                 args=(logging_queue, logging_quit, opts.log))
