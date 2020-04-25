@@ -110,9 +110,8 @@ def monitor_queue(logging_queue: mp.Queue, base_dir: str, quit: mp.Event) -> Non
 
         log.debug("queue check", queue_path=queue_path)
         for event_file in glob(os.path.join(queue_path, "*")):
-            # Limit the number of processes
-            if len(threads) > mp.cpu_count():
-                log.debug("Too many running threads (%d), not adding a new one yet.", len(threads))
+            # Limit the number of processes to 1/2 the number of cpus (or 1)
+            if len(threads) >= max(1, mp.cpu_count() // 2):
                 break
 
             os.unlink(event_file)
