@@ -23,6 +23,8 @@ td.prev:hover,td.next:hover {
 
 .feed table {
     border-spacing: 0px;
+    display: block;
+    width: 100%;
 }
 
 img.thumbnail {
