@@ -68,9 +68,19 @@ function next_events(e) {
     get_events(camera_name, event_offsets.get(camera_name), 5);
 }
 
+// Update all thumbnails that haven't been changed by the user
+function update_events() {
+    cameras.map(camera => {
+        var camera_name = camera[0];
+        if (event_offsets.get(camera_name) == 0) {
+            get_events(camera_name, 0, 5);
+        }
+    });
+}
+
 function setup_page() {
     // Camera information will eventually be filled in by an api call
-    // And then the page will be populated.
+    // And then the page will be populated
     cameras = [["Camera1", 8081], ["Camera2", 8082], ["Camera3", 8083], ["Camera4", 8084]];
     event_offsets = new Map();
 
@@ -112,6 +122,9 @@ function setup_page() {
         event_offsets.set(camera_name, 0);
         get_events(camera_name, 0, 5);
     });
+
+    // Update un-modified thumbnails every 30 seconds
+    setInterval(update_events, 30 * 1000);
 }
 
 setup_page();
