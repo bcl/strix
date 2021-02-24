@@ -18,7 +18,7 @@ import argparse
 
 version = "DEVEL"
 
-def parser() -> argparse.ArgumentParser:
+def parser(max_cores) -> argparse.ArgumentParser:
     """ Return the ArgumentParser"""
 
     parser = argparse.ArgumentParser(description="Motion Camera Web Interface")
@@ -48,6 +48,12 @@ def parser() -> argparse.ArgumentParser:
     optional.add_argument("--debug",
                           help="Output debug information",
                           action="store_true", default=False)
+    optional.add_argument("--max-cores",
+                          help="Maximum cores to use for ffmpeg",
+                          metavar="MAXCORES",
+                          type=int,
+                          default=max_cores)
+
 
     # add the show version option
     parser.add_argument("-V", help="show program's version number and exit",

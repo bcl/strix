@@ -30,6 +30,9 @@ from . import logger
 
 THUMBNAIL_SIZE = (640, 480)
 
+def max_cores() -> int:
+    return max(1, mp.cpu_count() // 2)
+
 ## Handle watching the queue and dispatching movie creation and directory moving
 
 def process_event(log: structlog.BoundLogger, base_dir: str, event: str) -> None:
@@ -95,7 +98,7 @@ def process_event(log: structlog.BoundLogger, base_dir: str, event: str) -> None
     except Exception as e:
         log.error("Moving to destination failed", event_path=event_path, exception=str(e))
 
-def monitor_queue(logging_queue: mp.Queue, base_dir: str, quit: mp.Event) -> None:
+def monitor_queue(logging_queue: mp.Queue, base_dir: str, quit: mp.Event, max_threads: int) -> None:
     threads = [] # type: List[mp.Process]
     log = logger.log(logging_queue)
 
@@ -108,10 +111,9 @@ def monitor_queue(logging_queue: mp.Queue, base_dir: str, quit: mp.Event) -> Non
             if not t.is_alive():
                 threads.remove(t)
 
-        log.debug("queue check", queue_path=queue_path)
         for event_file in glob(os.path.join(queue_path, "*")):
             # Limit the number of processes to 1/2 the number of cpus (or 1)
-            if len(threads) >= max(1, mp.cpu_count() // 2):
+            if len(threads) >= max_threads:
                 break
 
             os.unlink(event_file)

@@ -87,7 +87,7 @@ def check_motion_config(config_path: str) -> Tuple[str, List[str]]:
 
 
 def run() -> bool:
-    parser = cmdline.parser()
+    parser = cmdline.parser(queue.max_cores())
     opts = parser.parse_args()
 
     try:
@@ -118,7 +118,7 @@ def run() -> bool:
     queue_quit = mp.Event()
     queue_thread = mp.Process(name="queue-thread",
                               target=queue.monitor_queue,
-                              args=(logging_queue, base_dir, queue_quit))
+                              args=(logging_queue, base_dir, queue_quit, opts.max_cores))
     queue_thread.start()
     running_threads += [(queue_thread, queue_quit)]
 
