@@ -58,8 +58,8 @@ def process_event(log: structlog.BoundLogger, base_dir: str, event: str) -> None
     except Exception as e:
         log.debug("Failed to move debug images into ./debug/")
 
-    ffmpeg_cmd = ["ffmpeg", "-f", "image2", "-pattern_type", "glob", "-framerate", "5", "-i", "*.jpg", "-c:v",
-                  "libvpx", "-b:v", "2M", "video.webm"]
+    ffmpeg_cmd = ["ffmpeg", "-f", "image2", "-pattern_type", "glob", "-framerate", "5", "-i", "*.jpg",
+                  "-vf", "scale=1280:-2", "-c:v", "h264", "-b:v", "2M", "video.m4v"]
 
     # Make a movie out of the jpg images with ffmpeg
     try:
