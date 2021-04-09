@@ -69,19 +69,15 @@ def event_details(log: structlog.BoundLogger, event_path: str) -> Dict:
         start_time = datetime.now()
         end_time = datetime.now()
 
-    if os.path.exists(event_path+"/video.ogg"):
-        video = url+"/video.ogg"
-    elif os.path.exists(event_path+"/video.webm"):
-        video = url+"/video.webm"
-    else:
-        video = "images/missing.jpg"
-
-    if os.path.exists(event_path+"/debug/video.ogg"):
-        debug_video = url+"/debug/video.ogg"
-    elif os.path.exists(event_path+"/debug/video.webm"):
-        debug_video = url+"/debug/video.webm"
-    else:
-        debug_video = "images/missing.jpg"
+    # Find the videos, if they exist
+    video = []
+    for pth in [event_path, event_path+"/debug"]:
+        for ext in ["m4v", "webm", "mp4", "ogg"]:
+            if os.path.exists(pth+"/video."+ext):
+                video.append(url+"/video."+ext)
+                break
+        else:
+            video.append("images/missing.jpg")
 
     is_saved = os.path.exists(event_path+"/.saved")
 
@@ -91,8 +87,8 @@ def event_details(log: structlog.BoundLogger, event_path: str) -> Dict:
     return {
         "start":        str(start_time),
         "end":          str(end_time),
-        "video":        video,
-        "debug_video":  debug_video,
+        "video":        video[0],
+        "debug_video":  video[1],
         "thumbnail":    thumbnail,
         "images":       [],
         "saved":        is_saved
