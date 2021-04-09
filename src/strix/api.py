@@ -19,6 +19,10 @@ from datetime import datetime
 import multiprocessing as mp
 import os
 
+# Fix mimetypes so that it recognized m4v as video/mp4
+import mimetypes
+mimetypes.add_type("video/mp4", ".m4v")
+
 from bottle import route, run, static_file, request, Response
 
 from . import logger
