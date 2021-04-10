@@ -7,7 +7,12 @@ body {
 
 .feed {
     float: left;
-    width: 49%;
+}
+
+@media (min-width: 40em) {
+    .feed {
+        width: 49%;
+    }
 }
 
 td.prev,td.next {
