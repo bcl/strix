@@ -1,17 +1,16 @@
 body {
-    width: 100%;
 }
 
-.live-feeds {
+#live-feeds {
 }
 
 .feed {
-    float: left;
 }
 
 @media (min-width: 40em) {
-    .feed {
-        width: 49%;
+    #live-feeds {
+        column-count: 2;
+        column-gap: 1px;
     }
 }
 
