@@ -1,6 +1,5 @@
 bottle
-# Because bottle doesn't work with gevent >= 1.3.0
-gevent == 1.2.2
+gevent
 mypy
 Pillow
 pytest
