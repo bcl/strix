@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset=UTF-8>
+    <meta name="viewport" content="width=device-width">
+    <title>Strix - Motion Camera UI - Camera Events</title>
+    <link href="/style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <div id="viewer">
+        <video controls autoplay=false playsinline=true></video>
+    </div>
+    <div id="calendar"></div>
+    <div id="events"></div>
+
+
+<script type="text/javascript">
+var camera_events;
+
+function nice_time_string(time_str) {
+    var d = new Date(time_str);
+    // DoW Mo Day Year
+    var fields = d.toDateString().split(" ");
+    return fields.slice(0,3).join(" ") + " " + d.toLocaleTimeString();
+}
+
+function get_all_events(camera_name) {
+    // The API returns the events with the oldest one first in the .events list
+    fetch("/api/events/"+camera_name+"?limit=0")
+        .then(resp => resp.json())
+        .then(data => {
+            // Save for onclick actions
+            camera_events = data.events[camera_name];
+            var events = document.querySelector("#events");
+            // Try to get the size of the thumbnail images
+            let oneImg = document.createElement("img");
+            oneImg.onload = function() {
+                width = this.width;
+                height = this.height;
+                html = data.events[camera_name].map(event => {
+                    let alt = nice_time_string(event.start);
+                    return `<img class="thumbnail"
+                            onclick="javascript:load_viewer('${event.video}');"
+                            title="${alt}"
+                            loading="lazy"
+                            width=${width}
+                            height=${height}
+                            src="${event.thumbnail}" />`
+                }).reverse().join("\n");
+                events.innerHTML = html;
+            }
+            // Load the 1st thumbnail, triggering onload for it
+            oneImg.src = data.events[camera_name][0].thumbnail;
+        });
+}
+
+function load_viewer(event) {
+    scroll(0,0);
+
+    // Set the viewere to the event video
+    var viewer = document.querySelector("#viewer video");
+    viewer.src = event;
+    viewer.autoplay = true;
+
+}
+
+function setup_page() {
+    let params = new URLSearchParams(document.location.search);
+    let camera = params.get("camera");
+    if (camera == null) {
+        return;
+    }
+    let event = params.get("event");
+
+    // Get the events for this camera from the API server and populate the page
+    get_all_events(camera);
+
+    // Load the viewer with the event, if one was selected
+    if (event != null) {
+        load_viewer(event);
+    }
+}
+
+setup_page();
+</script>
+</body>
+</html>

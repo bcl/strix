@@ -40,7 +40,7 @@ function get_events(camera_name, offset, limit) {
             var videos = Array.from(document.querySelectorAll("#"+camera_name+" td.thumbnails div > a"))
             videos.forEach(video => {
                 event = data.events[camera_name][idx];
-                video.href=event.video;
+                video.href="events.html?camera="+camera_name+"&event="+event.video;
                 video.title=nice_time_string(event.start);
                 img = video.firstChild;
                 img.src = event.thumbnail;
