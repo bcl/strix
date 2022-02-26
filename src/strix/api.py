@@ -45,6 +45,10 @@ def run_api(logging_queue: mp.Queue, base_dir: str, host: str, port: int, debug:
     def serve_motion(filepath: str) -> Response:
         return static_file(filepath, root=base_dir)
 
+    @route('/api/cameras/list')
+    def serve_cameras_list() -> Response:
+        return {"cameras": sorted([d for d in os.listdir(base_dir) if d != "queue"])}
+
     @route('/api/events/<cameras>')
     def serve_events(cameras: str) -> Response:
         start = timestr_to_dt(request.query.get("start", "1985-10-26 01:22:00"))
