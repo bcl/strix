@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from datetime import datetime
 from glob import glob
+import json
 import os
 
 import structlog
@@ -42,6 +43,15 @@ def image_to_dt(event_date: str, image: str) -> datetime:
 
 def event_details(log: structlog.BoundLogger, event_path: str) -> Dict:
 #    log.info("event_details", path=event_path)
+
+    # Have the details already been created? If so read it and return.
+    try:
+        if os.path.exists(event_path+"/.details.json"):
+            with open(event_path+"/.details.json") as f:
+                return json.load(f)
+    except json.decoder.JSONDecodeError:
+        log.warn("Error reading .details.json from %s", event_path)
+
     (camera_name, event_date, event_time) = event_path.rsplit("/", 3)[-3:]
 
     # Grab the camera, date, and time and build the URL path
@@ -84,7 +94,7 @@ def event_details(log: structlog.BoundLogger, event_path: str) -> Dict:
 #    log.debug("event_details", thumbnail=thumbnail, start_time=str(start_time), end_time=str(end_time),
 #              video=video, debug_video=debug_video, saved=is_saved)
 
-    return {
+    details = {
         "start":        str(start_time),
         "end":          str(end_time),
         "video":        video[0],
@@ -93,6 +103,10 @@ def event_details(log: structlog.BoundLogger, event_path: str) -> Dict:
         "images":       [],
         "saved":        is_saved
     }
+    with open(event_path+"/.details.json", "w") as f:
+        json.dump(details, f)
+    return details
+
 
 def camera_events(log: structlog.BoundLogger, base_dir: str, camera: str,
                   start: datetime, end: datetime, offset: int, limit: int) -> List[Dict]:
@@ -114,7 +128,7 @@ def camera_events(log: structlog.BoundLogger, base_dir: str, camera: str,
         events.insert(0, event_details(log, event_path))
 
         added += 1
-        if added >= limit:
+        if limit > 0 and added >= limit:
             break
 
     return events
