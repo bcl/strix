@@ -95,16 +95,12 @@ function setup_page() {
             <tr class="controls">
             <td class="prev">&lt</td>
             <td class="thumbnails"><div>
-            <a class="video" target="video" href="/"><img class="thumbnail" src="/" /></a>
-            <a class="video" target="video" href="/"><img class="thumbnail" src="/" /></a>
-            <a class="video" target="video" href="/"><img class="thumbnail" src="/" /></a>
-            <a class="video" target="video" href="/"><img class="thumbnail" src="/" /></a>
-            <a class="video" target="video" href="/"><img class="thumbnail" src="/" /></a>
+            <a class="video" target="video" href="/"><img class="thumbnail" src="/" /></a><a class="video" target="video" href="/"><img class="thumbnail" src="/" /></a><a class="video" target="video" href="/"><img class="thumbnail" src="/" /></a><a class="video" target="video" href="/"><img class="thumbnail" src="/" /></a><a class="video" target="video" href="/"><img class="thumbnail" src="/" /></a>
             </div></td>
             <td class="next">&gt</td></tr>
             </table>
             </div>`;
-    }).join("\n");
+    }).join("");
     live_feeds.innerHTML = html;
 
     set_feed_href();
