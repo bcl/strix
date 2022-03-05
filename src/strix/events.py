@@ -18,10 +18,27 @@ from datetime import datetime
 from glob import glob
 import json
 import os
+import threading
 
 import structlog
 
 from typing import Dict, List
+
+class EventCacheClass:
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._cache = {}
+
+    def get(self, key):
+        with self._lock:
+            return self._cache[key]
+
+    def set(self, key, value):
+        with self._lock:
+            self._cache[key] = value
+
+# Singleton
+EventCache = EventCacheClass()
 
 
 def path_to_dt(path: str) -> datetime:
@@ -44,11 +61,18 @@ def image_to_dt(event_date: str, image: str) -> datetime:
 def event_details(log: structlog.BoundLogger, event_path: str) -> Dict:
 #    log.info("event_details", path=event_path)
 
-    # Have the details already been created? If so read it and return.
+    # Check the cache for the details
+    try:
+        return EventCache.get(event_path)
+    except KeyError:
+        pass
+
+    # Try the file cache next
     try:
         if os.path.exists(event_path+"/.details.json"):
             with open(event_path+"/.details.json") as f:
-                return json.load(f)
+                details = json.load(f)
+            EventCache.set(event_path, details)
     except json.decoder.JSONDecodeError:
         log.warn("Error reading .details.json from %s", event_path)
 
@@ -103,8 +127,10 @@ def event_details(log: structlog.BoundLogger, event_path: str) -> Dict:
         "images":       [],
         "saved":        is_saved
     }
+    EventCache.set(event_path, details)
     with open(event_path+"/.details.json", "w") as f:
         json.dump(details, f)
+
     return details
 
 
