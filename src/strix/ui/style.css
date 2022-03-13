@@ -1,4 +1,9 @@
+html {
+    height: 100%;
+}
+
 body {
+    height: 100%;
 }
 
 #live-feeds {
@@ -15,23 +20,23 @@ body {
 }
 
 #topview {
-  width: 100%;
-  height: 100%
+  display: flex;
+  max-height: 70%
 }
 
 #viewer {
-  width: 80%;
-  display: inline-block;
+  flex: 7;
 }
 
 video {
   width: 100%;
+  height: 100%;
 }
 
 
 #days {
-  display: inline-block;
   overflow: auto;
+  flex: 1;
 }
 
 #days ul {
