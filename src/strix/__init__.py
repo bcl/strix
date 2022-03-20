@@ -31,7 +31,7 @@ from . import motion
 ## Start the bottle/API thread
 ## Wait for a signal to shutdown
 
-from typing import List, Match, Tuple, Any
+from typing import List, Match, Optional, Tuple, Any
 
 def check_motion_config(config_path: str) -> Tuple[str, List[str]]:
     """ Check the config file to make sure the settings match what Strix needs.
@@ -55,24 +55,24 @@ def check_motion_config(config_path: str) -> Tuple[str, List[str]]:
 
         on_event_end = c.get("on_event_end", "")
         if on_event_end:
-            m = re.match(on_event_end_re, on_event_end) # type: Match[str]
-            if not m or not m.groups():
+            em = re.match(on_event_end_re, on_event_end) # type: Optional[Match[str]]
+            if not em or not em.groups():
                 continue
             # Above errors will be caught by not having base_queue_dir set.
             if not base_queue_dir:
-                base_queue_dir = m.group(1)
-            elif base_queue_dir != m.group(1):
+                base_queue_dir = em.group(1)
+            elif base_queue_dir != em.group(1):
                 errors += ["All of the paths in on_event_end MUST match."]
 
         target_dir = c.get("target_dir", "")
         if target_dir:
-            m = re.match(target_dir_re, target_dir)
-            if not m or not m.groups():
+            tm = re.match(target_dir_re, target_dir) # type: Optional[Match[str]]
+            if not tm or not tm.groups():
                 continue
             # Above errors will be caught by not having base_target_dir set.
             if not base_target_dir:
-                base_target_dir = m.group(1)
-            elif base_target_dir != m.group(1):
+                base_target_dir = tm.group(1)
+            elif base_target_dir != tm.group(1):
                 errors += ["All of the base paths in target_dir MUST match."]
 
     if not base_target_dir:
@@ -104,7 +104,7 @@ def run() -> bool:
 
     # Start logger thread
     logger_queue = mp.JoinableQueue()  # type: mp.JoinableQueue[List[Any]]
-    logger_quit = mp.Event()           # type: mp.Event
+    logger_quit = mp.Event()
     logger_thread = mp.Process(name="logger-thread",
                                 target=logger.listener,
                                 args=(logger_queue, logger_quit, opts.log))
