@@ -81,6 +81,14 @@ class EventCacheClass:
         with self._lock:
             self._force_expire = force
 
+    def log_info(self, *args):
+        if self._log:
+            self._log.info(*args)
+
+    def log_error(self, *args):
+        if self._log:
+            self._log.error(*args)
+
     def _expire_events(self):
         start = datetime.now()
 
@@ -89,8 +97,8 @@ class EventCacheClass:
                 return
         self._last_check = datetime.now()
 
-        if self._log and not self._force_expire:
-            self._log.info("Checking cache...")
+        if not self._force_expire:
+            self.log_info("Checking cache...")
 
         remove = {}
         for e in self._cache:
@@ -103,15 +111,14 @@ class EventCacheClass:
                     else:
                         remove[daypath] = [e]
 
-        if self._log and not self._force_expire:
-            self._log.info(f"Done checking cache in {datetime.now()-start}")
+        if not self._force_expire:
+            self.log_info(f"Done checking cache in {datetime.now()-start}")
 
         remove = {}
         if len(remove) == 0:
             return
 
-        if self._log:
-            self._log.info(f"Removing {len(remove)} days")
+        self.log_info(f"Removing {len(remove)} days")
 
         # Create the temporary delete_queue directory
         tdir = tempfile.TemporaryDirectory(dir=os.path.join(self._base_dir, "delete_queue"))
@@ -122,12 +129,10 @@ class EventCacheClass:
             # All paths should have a Camera* component
             cm = re.search("(Camera\d+)", daypath)
             if not cm:
-                if self._log:
-                    self._log.error(f"Camera* missing from path {daypath}")
+                self.log_error(f"Camera* missing from path {daypath}")
 
             if cm and os.path.exists(daypath):
-                if self._log:
-                    self._log.info("REMOVE: %s", daypath)
+                self.log_info("REMOVE: %s", daypath)
 
                 if not os.path.exists(os.path.join(delete_queue, cm.group())):
                     os.makedirs(os.path.join(delete_queue, cm.group()))
@@ -136,12 +141,11 @@ class EventCacheClass:
                 shutil.move(daypath, os.path.join(delete_queue, cm.group()))
 
             # Remove the events from the cache
-            self._log.info(f"Removing {len(remove[daypath])} events")
+            self.log_info(f"Removing {len(remove[daypath])} events")
             for e in remove[daypath]:
                 del self._cache[e]
 
-        if self._log:
-            self._log.info(f"Expire of {len(remove)} days took: {datetime.now()-start}")
+        self.log_info(f"Expire of {len(remove)} days took: {datetime.now()-start}")
 
         def dth_fn(delete_queue):
             shutil.rmtree(delete_queue, ignore_errors=True)
