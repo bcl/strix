@@ -14,7 +14,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from datetime import datetime, timedelta
 import multiprocessing as mp
 import os
 import re
@@ -22,6 +21,7 @@ import time
 
 from . import api
 from . import cmdline
+from . import events
 from . import queue
 from . import logger
 from . import motion
@@ -118,6 +118,13 @@ def run() -> bool:
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
     log.addHandler(ch)
+
+    # Initialize Event Cache settings
+    events.EventCache.logger(log)
+    events.EventCache.base_dir(base_dir)
+    events.EventCache.keep(opts.keep_days)
+    events.EventCache.check_cache(opts.check_cache)
+    events.preload_cache(log, base_dir)
 
     # Start queue monitor and processing thread (starts its own Multiprocessing threads)
     queue_path = os.path.abspath(os.path.join(base_dir, "queue/"))
