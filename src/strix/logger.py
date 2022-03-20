@@ -43,7 +43,7 @@ def listener(queue: mp.Queue, stop_event: mp.Event, log_path: str) -> None:
     handler = RotatingFileHandler(log_path, maxBytes=100*1024**2, backupCount=10)
     formatter = logging.Formatter('%(message)s')
     handler.setFormatter(formatter)
-    logger = logging.getLogger()
+    logger = logging.getLogger("logger-listener")
     logger.addHandler(handler)
 
     # XXX QueueListener doesn't work for me, do it manually
