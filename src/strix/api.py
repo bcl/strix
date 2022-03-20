@@ -30,21 +30,21 @@ from . import logger
 from .events import camera_events, EventCache
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
-def timestr_to_dt(rfc_str: str) -> datetime:
+def timestr_to_dt(rfc_str):
     return datetime.strptime(rfc_str, TIME_FORMAT)
 
-def run_api(logging_queue: mp.Queue, base_dir: str, host: str, port: int, debug: bool) -> None:
+def run_api(logging_queue, base_dir, host, port, debug):
     log = logger.log(logging_queue)
     log.info("Starting API", base_dir=base_dir, host=host, port=port, debug=debug)
     EventCache.logger(log)
 
     @route('/')
     @route('/<filename>')
-    def serve_root(filename: str = "index.html") -> Response:
+    def serve_root(filename="index.html"):
         return static_file(filename, root=os.path.dirname(__file__)+"/ui")
 
     @route('/motion/<filepath:path>')
-    def serve_motion(filepath: str) -> Response:
+    def serve_motion(filepath):
         return static_file(filepath, root=base_dir)
 
     @route('/api/cameras/list')
@@ -52,7 +52,9 @@ def run_api(logging_queue: mp.Queue, base_dir: str, host: str, port: int, debug:
         return {"cameras": sorted([d for d in os.listdir(base_dir) if d != "queue"])}
 
     @route('/api/events/<cameras>')
-    def serve_events(cameras: str) -> Response:
+    def serve_events(cameras):
+        # request.query is a bottle.MultiDict which pylint doesn't understand
+        # pylint: disable=no-member
         start = timestr_to_dt(request.query.get("start", "1985-10-26 01:22:00"))
         end   = timestr_to_dt(request.query.get("end", datetime.now().strftime(TIME_FORMAT)))
         offset= int(request.query.get("offset", "0"))

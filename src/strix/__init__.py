@@ -31,16 +31,14 @@ from . import motion
 ## Start the bottle/API thread
 ## Wait for a signal to shutdown
 
-from typing import List, Match, Optional, Tuple, Any
-
-def check_motion_config(config_path: str) -> Tuple[str, List[str]]:
+def check_motion_config(config_path):
     """ Check the config file to make sure the settings match what Strix needs.
     """
     picture_filename = "%Y-%m-%d/%v/%H-%M-%S-%q"
     on_event_end_re = r".*touch (.*)/queue/Camera%t_%Y-%m-%d_%v"
     target_dir_re = r"(.*)/Camera\d+"
 
-    errors = [] # type: List[str]
+    errors = []
     base_target_dir = ""
     base_queue_dir = ""
     found_pf = False
@@ -55,7 +53,7 @@ def check_motion_config(config_path: str) -> Tuple[str, List[str]]:
 
         on_event_end = c.get("on_event_end", "")
         if on_event_end:
-            em = re.match(on_event_end_re, on_event_end) # type: Optional[Match[str]]
+            em = re.match(on_event_end_re, on_event_end)
             if not em or not em.groups():
                 continue
             # Above errors will be caught by not having base_queue_dir set.
@@ -66,7 +64,7 @@ def check_motion_config(config_path: str) -> Tuple[str, List[str]]:
 
         target_dir = c.get("target_dir", "")
         if target_dir:
-            tm = re.match(target_dir_re, target_dir) # type: Optional[Match[str]]
+            tm = re.match(target_dir_re, target_dir)
             if not tm or not tm.groups():
                 continue
             # Above errors will be caught by not having base_target_dir set.
@@ -87,7 +85,7 @@ def check_motion_config(config_path: str) -> Tuple[str, List[str]]:
     return (base_target_dir, errors)
 
 
-def run() -> bool:
+def run():
     parser = cmdline.parser(queue.max_cores())
     opts = parser.parse_args()
 
@@ -97,13 +95,13 @@ def run() -> bool:
         errors = [str(e)]
 
     if errors:
-        def p_e(e: str) -> None:
+        def p_e(e):
             print("ERROR: %s" % e)
         list(map(p_e, errors))
         return False
 
     # Start logger thread
-    logger_queue = mp.JoinableQueue()  # type: mp.JoinableQueue[List[Any]]
+    logger_queue = mp.JoinableQueue()
     logger_quit = mp.Event()
     logger_thread = mp.Process(name="logger-thread",
                                 target=logger.listener,

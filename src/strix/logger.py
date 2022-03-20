@@ -39,7 +39,7 @@ structlog.configure(
     cache_logger_on_first_use=True,
 )
 
-def listener(queue: mp.Queue, stop_event: mp.Event, log_path: str) -> None:
+def listener(queue, stop_event, log_path):
     handler = RotatingFileHandler(log_path, maxBytes=100*1024**2, backupCount=10)
     formatter = logging.Formatter('%(message)s')
     handler.setFormatter(formatter)
@@ -60,7 +60,7 @@ def listener(queue: mp.Queue, stop_event: mp.Event, log_path: str) -> None:
             import sys, traceback
             traceback.print_exc(file=sys.stderr)
 
-def log(queue: mp.Queue) -> structlog.BoundLogger:
+def log(queue):
     handler = QueueHandler(queue)
     root = structlog.get_logger()
     root.addHandler(handler)

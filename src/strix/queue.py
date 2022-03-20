@@ -24,8 +24,6 @@ import time
 from PIL import Image
 import structlog
 
-from typing import List
-
 from . import logger
 
 THUMBNAIL_SIZE = (640, 480)
@@ -98,8 +96,8 @@ def process_event(log: structlog.BoundLogger, base_dir: str, event: str) -> None
     except Exception as e:
         log.error("Moving to destination failed", event_path=event_path, exception=str(e))
 
-def monitor_queue(logging_queue: mp.Queue, base_dir: str, quit: mp.Event, max_threads: int) -> None:
-    threads = [] # type: List[mp.Process]
+def monitor_queue(logging_queue, base_dir, quit, max_threads):
+    threads = []
     log = logger.log(logging_queue)
 
     queue_path = os.path.abspath(os.path.join(base_dir, "queue/"))

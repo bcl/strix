@@ -26,8 +26,6 @@ import threading
 
 import structlog
 
-from typing import Dict, List
-
 class EventCacheClass:
     def __init__(self):
         self._log = None
@@ -44,10 +42,6 @@ class EventCacheClass:
             return self._cache[key]
 
     def set(self, key, value):
-        # DEBUG
-        if self._log:
-            self._log.info(f"EventCache: {key} = {value}")
-
         with self._lock:
             # Convert start/end to datetime object
             if "start" in value and type(value["start"]) == type(""):
@@ -177,14 +171,14 @@ def preload_cache(log, base_dir):
     EventCache.force_expire(False)
 
 
-def path_to_dt(path: str) -> datetime:
+def path_to_dt(path):
     # Use the last 2 elements of the path to construct a Datatime
     (date, time) = path.split("/")[-2:]
     time = time.replace("-", ":")
     dt_str = "{0} {1}".format(date, time)
     return datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S")
 
-def image_to_dt(event_date: str, image: str) -> datetime:
+def image_to_dt(event_date, image):
     """ Convert an event date (YYYY-MM-DD) and image HH-MM-SS-FF
 
     returns a datetime object
@@ -194,9 +188,7 @@ def image_to_dt(event_date: str, image: str) -> datetime:
     return datetime.strptime(event_date+"/"+image_time, "%Y-%m-%d/%H-%M-%S")
 
 
-def event_details(log: structlog.BoundLogger, event_path: str) -> Dict:
-#    log.info("event_details", path=event_path)
-
+def event_details(log, event_path):
     # Check the cache for the details
     try:
         return EventCache.get(event_path)
@@ -257,9 +249,6 @@ def event_details(log: structlog.BoundLogger, event_path: str) -> Dict:
 
     is_saved = os.path.exists(event_path+"/.saved")
 
-#    log.debug("event_details", thumbnail=thumbnail, start_time=str(start_time), end_time=str(end_time),
-#              video=video, debug_video=debug_video, saved=is_saved)
-
     details = {
         "start":        start_time,
         "end":          end_time,
@@ -281,15 +270,14 @@ def event_details(log: structlog.BoundLogger, event_path: str) -> Dict:
     return details
 
 
-def camera_events(log: structlog.BoundLogger, base_dir: str, camera: str,
-                  start: datetime, end: datetime, offset: int, limit: int) -> List[Dict]:
+def camera_events(log, base_dir, camera, start, end, offset, limit):
     # YYYY-MM-DD/HH-MM-SS is the format of the event directories.
     glob_path="%s/%s/????-??-??/??-??-??" % (base_dir, camera)
 
     # Newest to oldest, limited by offset and limit
     skipped = 0
     added = 0
-    events = []     # type: List[Dict]
+    events = []
     for event_path in sorted(glob(glob_path), reverse=True):
         dt = path_to_dt(event_path)
         if dt < start or dt > end:

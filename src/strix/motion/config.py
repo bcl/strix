@@ -16,15 +16,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 
-from typing import Dict, Tuple
-
 class MotionConfig():
     """ Parse a motion configuration file into dicts
 
     Last key wins. Threads are stored in self.thread["thread-N"]
     """
-    config = {} # type: Dict
-    thread = {} # type: Dict
+    config = {}
+    thread = {}
     _thread_n = 0
 
     def thread_n(self) -> str:
@@ -35,7 +33,7 @@ class MotionConfig():
         self._thread_n += 1
         return "thread-%d" % self._thread_n
 
-    def split(self, s: str) -> Tuple[str, str]:
+    def split(self, s):
         """ Split the line into key and optional values.
 
         :returns: (k, v) where v may be ""
@@ -51,7 +49,7 @@ class MotionConfig():
             v = ""
         return (k, v)
 
-    def parse(self, config_path: str) -> Dict:
+    def parse(self, config_path):
         """ Parse a motion config file
 
         :returns: dict
@@ -62,7 +60,7 @@ class MotionConfig():
                  for line in f.readlines()
                  if line.strip() and not line.startswith("#")])
 
-    def __init__(self, config_path: str) -> None:
+    def __init__(self, config_path):
         self.config = self.parse(config_path)
         for t in filter(lambda k: k.startswith("thread") or k.startswith("camera"), self.config.keys()):
             thread_path = self.config[t]
