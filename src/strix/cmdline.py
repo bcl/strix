@@ -53,6 +53,16 @@ def parser(max_cores) -> argparse.ArgumentParser:
                           metavar="MAXCORES",
                           type=int,
                           default=max_cores)
+    optional.add_argument("--keep-days",
+                          help="How many days of events to keep",
+                          metavar="KEEPDAYS",
+                          type=int,
+                          default=45)
+    optional.add_argument("--check-cache",
+                          help="How often to check cache for expired events (in minutes)",
+                          metavar="CHECKCACHE",
+                          type=int,
+                          default=60)
 
 
     # add the show version option
