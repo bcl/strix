@@ -27,7 +27,7 @@ from bottle import install, route, run, static_file, request, Response, JSONPlug
 from json import dumps
 
 from . import logger
-from .events import camera_events
+from .events import camera_events, EventCache
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 def timestr_to_dt(rfc_str: str) -> datetime:
@@ -36,6 +36,7 @@ def timestr_to_dt(rfc_str: str) -> datetime:
 def run_api(logging_queue: mp.Queue, base_dir: str, host: str, port: int, debug: bool) -> None:
     log = logger.log(logging_queue)
     log.info("Starting API", base_dir=base_dir, host=host, port=port, debug=debug)
+    EventCache.logger(log)
 
     @route('/')
     @route('/<filename>')
