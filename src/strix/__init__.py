@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+from datetime import datetime, timedelta
 import multiprocessing as mp
 import os
 import re
@@ -101,14 +102,22 @@ def run() -> bool:
         list(map(p_e, errors))
         return False
 
-    # Start logging thread
-    logging_queue = mp.JoinableQueue()  # type: mp.JoinableQueue[List[Any]]
-    logging_quit = mp.Event()           # type: mp.Event
-    logging_thread = mp.Process(name="logging-thread",
+    # Start logger thread
+    logger_queue = mp.JoinableQueue()  # type: mp.JoinableQueue[List[Any]]
+    logger_quit = mp.Event()           # type: mp.Event
+    logger_thread = mp.Process(name="logger-thread",
                                 target=logger.listener,
-                                args=(logging_queue, logging_quit, opts.log))
-    logging_thread.start()
-    running_threads = [(logging_thread, logging_quit)]
+                                args=(logger_queue, logger_quit, opts.log))
+    logger_thread.start()
+    running_threads = [(logger_thread, logger_quit)]
+
+    # Setup a console logger for the startup messages
+    import logging
+    log = logging.getLogger("startup-logging")
+    log.setLevel(level=logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    log.addHandler(ch)
 
     # Start queue monitor and processing thread (starts its own Multiprocessing threads)
     queue_path = os.path.abspath(os.path.join(base_dir, "queue/"))
@@ -118,7 +127,7 @@ def run() -> bool:
     queue_quit = mp.Event()
     queue_thread = mp.Process(name="queue-thread",
                               target=queue.monitor_queue,
-                              args=(logging_queue, base_dir, queue_quit, opts.max_cores))
+                              args=(logger_queue, base_dir, queue_quit, opts.max_cores))
     queue_thread.start()
     running_threads += [(queue_thread, queue_quit)]
 
@@ -126,7 +135,7 @@ def run() -> bool:
     api_quit = mp.Event()
     api_thread = mp.Process(name="api-thread",
                             target=api.run_api,
-                            args=(logging_queue, base_dir, opts.host, opts.port, opts.debug))
+                            args=(logger_queue, base_dir, opts.host, opts.port, opts.debug))
     api_thread.start()
     running_threads += [(api_thread, api_quit)]
 
