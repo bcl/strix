@@ -23,7 +23,8 @@ import os
 import mimetypes
 mimetypes.add_type("video/mp4", ".m4v")
 
-from bottle import route, run, static_file, request, Response
+from bottle import install, route, run, static_file, request, Response, JSONPlugin
+from json import dumps
 
 from . import logger
 from .events import camera_events
@@ -69,4 +70,6 @@ def run_api(logging_queue: mp.Queue, base_dir: str, host: str, port: int, debug:
                 "limit":    limit,
                 "events":   events}
 
+    # Use str as default in json dumps for objects like datetime
+    install(JSONPlugin(json_dumps=lambda s: dumps(s, default=str)))
     run(host=host, port=port, debug=debug, server="gevent")
