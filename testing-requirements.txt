@@ -1,6 +1,0 @@
-coverage
-nose
-pylint
-pytest
-mypy
-tox

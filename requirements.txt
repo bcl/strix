@@ -1,7 +1,0 @@
-bottle
-gevent
-mypy
-Pillow
-pytest
-rfc3339
-structlog
