@@ -30,8 +30,7 @@ class EventCacheClass:
     def __init__(self):
         self._log = None
         self._base_dir = "/invalid/path/for/expire"
-        self._last_check = datetime(1985, 10, 26, 1, 22, 0)
-        self._force_expire = False
+        self._last_check = datetime.now()
         self._check_cache = 60
         self._keep_days = 9999
         self._lock = threading.Lock()
@@ -77,10 +76,6 @@ class EventCacheClass:
         with self._lock:
             self._last_check = datetime(1985, 10, 26, 1, 22, 0)
 
-    def force_expire(self, force=False):
-        with self._lock:
-            self._force_expire = force
-
     def log_info(self, *args):
         if self._log:
             self._log.info(*args)
@@ -92,13 +87,11 @@ class EventCacheClass:
     def _expire_events(self):
         start = datetime.now()
 
-        if not self._force_expire:
-            if start - self._last_check < timedelta(minutes=self._check_cache):
-                return
+        if start - self._last_check < timedelta(minutes=self._check_cache):
+            return
         self._last_check = datetime.now()
 
-        if not self._force_expire:
-            self.log_info("Checking cache...")
+        self.log_info("Checking cache...")
 
         remove = {}
         for e in self._cache:
@@ -111,18 +104,15 @@ class EventCacheClass:
                     else:
                         remove[daypath] = [e]
 
-        if not self._force_expire:
-            self.log_info(f"Done checking cache in {datetime.now()-start}")
+        self.log_info(f"Done checking cache in {datetime.now()-start}")
 
-        remove = {}
         if len(remove) == 0:
             return
 
-        self.log_info(f"Removing {len(remove)} days")
+        self.log_info(f"Removing {len(remove)} directories")
 
         # Create the temporary delete_queue directory
-        tdir = tempfile.TemporaryDirectory(dir=os.path.join(self._base_dir, "delete_queue"))
-        delete_queue = tdir.name
+        delete_queue = tempfile.mkdtemp(dir=os.path.join(self._base_dir, "delete_queue"))
 
         # Move each day's directory to the temporary delete_queue directory
         for daypath in remove:
@@ -145,7 +135,7 @@ class EventCacheClass:
             for e in remove[daypath]:
                 del self._cache[e]
 
-        self.log_info(f"Expire of {len(remove)} days took: {datetime.now()-start}")
+        self.log_info(f"Expire of {len(remove)} directories took: {datetime.now()-start}")
 
         def dth_fn(delete_queue):
             shutil.rmtree(delete_queue, ignore_errors=True)
@@ -165,14 +155,15 @@ def preload_cache(log, base_dir):
     log.info("Pre-loading event cache...")
     start = datetime(1985, 10, 26, 1, 22, 0)
     total = timedelta()
-    EventCache.force_expire(True)
     for camera in sorted(c for c in os.listdir(base_dir) if c.startswith("Camera")):
-        end   = datetime.now()
+        end = datetime.now()
         _ = camera_events(log, base_dir, camera, start, end, 0, 0)
         log.info(f"{camera} event cache loaded in {datetime.now()-end} seconds")
         total += datetime.now()-end
     log.info(f"Event cache loaded in {total} seconds")
-    EventCache.force_expire(False)
+
+    # Next event will check for expired entries
+    EventCache.reset_check()
 
 
 def path_to_dt(path):
