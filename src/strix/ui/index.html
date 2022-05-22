@@ -20,7 +20,7 @@ function set_feed_href() {
 function set_feed_src() {
     var feeds = Array.from(document.querySelectorAll(".feed-src"));
     feeds.forEach(feed => {
-        feed.src = "//" + location.hostname + ":" + feed.attributes["data-port"].value;
+        feed.src = "//" + location.hostname + ":" + feed.attributes["data-port"].value + "/video.mjpeg?rand=" + Math.random();
     });
 }
 
@@ -81,7 +81,7 @@ function update_events() {
 function setup_page() {
     // Camera information will eventually be filled in by an api call
     // And then the page will be populated
-    cameras = [["Camera1", 8081], ["Camera2", 8082], ["Camera3", 8083], ["Camera4", 8084]];
+    cameras = [["Camera1", 8081], ["Camera2", 8082], ["Camera3", 8083], ["Camera4", 8084], ["Camera5", 8085]];
     event_offsets = new Map();
 
     // Setup the camera HTML
@@ -91,7 +91,7 @@ function setup_page() {
         var port = camera[1];
         return `<div class="feed" id="${camera_name}">
             <table>
-            <tr><a href="" class="feed-href" data-port="${port}"><img src="" class="feed-src" data-port="${port}"></a></tr>
+            <tr><a href="" class="feed-href" data-port="${port}"><img src="#" class="feed-src" data-port="${port}"></a></tr>
             <tr class="controls">
             <td class="prev">&lt</td>
             <td class="thumbnails"><div>
