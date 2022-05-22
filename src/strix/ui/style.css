@@ -10,6 +10,7 @@ body {
 }
 
 .feed {
+    break-inside: avoid;
 }
 
 @media (min-width: 40em) {
