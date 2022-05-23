@@ -13,6 +13,7 @@
     </div>
     <div id="days">
         <ul id="daylinks">
+            <li><a id="debugvideo" onclick="">debug</a></li>
             <li><a id="scrollback" onclick="">Jump Back</a></li>
         </ul>
     </div>
@@ -103,6 +104,13 @@ function load_viewer(event, scrollY) {
     // Setup the scrollback link
     var sb = document.querySelector("#scrollback");
     sb.onclick = function() {scroll(0, scrollY);};
+
+    // Setup the debug link
+    var dbg = document.querySelector("#debugvideo");
+    dbg.onclick = function() {
+        viewer.src = viewer.src.replace("video.m4v", "debug/video.m4v");
+    };
+
 }
 
 function setup_page() {
