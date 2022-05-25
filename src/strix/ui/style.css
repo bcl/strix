@@ -95,11 +95,12 @@ img.thumbnail {
     height: auto;
     display: inline;
     vertical-align: text-bottom;
-#    float: left;
+    transition-delay: 0s;
 }
 
 img.thumbnail:hover {
     transform: scale(2.0);
+    transition-delay: 2s;
 }
 
 img.feed-src {
