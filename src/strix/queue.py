@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from glob import glob
+import json
 import multiprocessing as mp
 import os
 import shutil
@@ -30,6 +31,67 @@ THUMBNAIL_SIZE = (640, 480)
 
 def max_cores() -> int:
     return max(1, mp.cpu_count() // 2)
+
+
+def GetImageDescriptions(path):
+    """
+    Extract EXIF ImageDescription for all the images in the directory
+    """
+    ## Run exiftool on the files
+    cmd = ["exiftool", "-json", "-q", "-ImageDescription", path]
+    try:
+        out = subprocess.check_output(cmd)
+        j = json.loads(out)
+        return [d for d in j if "ImageDescription" in d]
+    except subprocess.CalledProcessError:
+        pass
+
+    return []
+
+
+def DescriptionDict(desc):
+    """
+    Split the motion info into dict entries
+
+    <changed>-<noise>-<width>-<height>-<X>-<Y>
+    """
+    try:
+        changed, noise, width, height, x, y = desc.split("-")
+        return {
+            "changed": int(changed),
+            "noise": int(noise),
+            "width": int(width),
+            "height": int(height),
+            "x": int(x),
+            "y": int(y),
+            "area": int(width) * int(height)
+        }
+    except ValueError:
+        return {
+            "changed": 0,
+            "noise": 0,
+            "width": 0,
+            "height": 0,
+            "x": 0,
+            "y": 0,
+            "area": 0
+        }
+
+
+def BestThumbnail(path):
+    """
+    Make a best guess at the image to use for a thumbnail
+
+    Use the one with the most changes.
+    """
+    data = GetImageDescriptions(path)
+
+    images = []
+    for i in data:
+        images.append({"name": i["SourceFile"], "description": DescriptionDict(i["ImageDescription"])})
+    sorted_images = sorted(images, key=lambda i: i["description"]["changed"], reverse=True)
+    return sorted_images[0]["name"]
+
 
 ## Handle watching the queue and dispatching movie creation and directory moving
 
@@ -71,12 +133,10 @@ def process_event(log: structlog.BoundLogger, base_dir: str, event: str) -> None
     except Exception as e:
         log.error("Failed to create debug video", exception=str(e))
 
-    # Create a thumbnail of the 25% image of the capture, on the theory that it
-    # has the best chance of being 'interesting' since it is near the trigger point
     try:
-        images = sorted(list(glob(os.path.join(event_path, "*.jpg"))))
-        idx = images[int(len(images)//4)]
-        im = Image.open(idx)
+        # Get the image with the highest change value
+        thumbnail = BestThumbnail(event_path)
+        im = Image.open(thumbnail)
         # im.size will get the actual size of the image
         im.thumbnail(THUMBNAIL_SIZE)
         im.save(os.path.join(event_path, "thumbnail.jpg"), "JPEG")
@@ -86,6 +146,7 @@ def process_event(log: structlog.BoundLogger, base_dir: str, event: str) -> None
     # Move the directory to its final location
     try:
         # Use the time of the first image
+        images = sorted(list(glob(os.path.join(event_path, "*-*-*-*.jpg"))))
         first_jpg = os.path.split(images[0])[1]
         first_time = first_jpg.rsplit("-", 1)[0]
         event_path_base = os.path.split(event_path)[0]
