@@ -20,6 +20,13 @@ body {
     }
 }
 
+@media (min-width: 100em) {
+    #live-feeds {
+        column-count: 3;
+        column-gap: 1px;
+    }
+}
+
 #topview {
   display: flex;
   max-height: 70%
