@@ -36,6 +36,27 @@ class EventCacheClass:
         self._lock = threading.Lock()
         self._cache = {}
 
+    def cleanup_dq(self):
+        """
+        Cleanup any delete_queue subdirectories that may be leftover from previous run
+        """
+
+        def dth_fn(dq_dirs):
+            for dq in dq_dirs:
+                if not dq.startswith(self._base_dir):
+                    raise RuntimeError(f"Invalid dq path: {dq}")
+
+                shutil.rmtree(dq, ignore_errors=True)
+
+        base = os.path.join(self._base_dir, "delete_queue")
+        dq_dirs = [os.path.join(base, dq) for dq in os.listdir(base)]
+
+        # Start a thread to do the actual delete in the background
+        dth = mp.Process(name="delete-thread",
+                            target=dth_fn,
+                            args=(dq_dirs,))
+        dth.start()
+
     def get(self, key):
         with self._lock:
             return self._cache[key]

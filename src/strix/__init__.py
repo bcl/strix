@@ -122,6 +122,7 @@ def run():
     events.EventCache.base_dir(base_dir)
     events.EventCache.keep(opts.keep_days)
     events.EventCache.check_cache(opts.check_cache)
+    events.EventCache.cleanup_dq()
     events.preload_cache(log, base_dir)
 
     # Start queue monitor and processing thread (starts its own Multiprocessing threads)
