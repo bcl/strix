@@ -10,6 +10,8 @@
 <div id="live-feeds">
 </div>
 <script type="text/javascript">
+var cameras = [];
+
 function set_feed_href() {
     var feeds = Array.from(document.querySelectorAll(".feed-href"));
     feeds.forEach(feed => {
@@ -78,7 +80,7 @@ function update_events() {
     });
 }
 
-function setup_page(cameras) {
+function setup_page() {
     event_offsets = new Map();
 
     // Setup the camera HTML
@@ -124,7 +126,9 @@ function setup_page(cameras) {
 fetch("/api/cameras/list")
     .then(resp => resp.json())
     .then(data => {
-        setup_page(data.cameras);
+        // This is a global variable, used by several functions
+        cameras = data.cameras;
+        setup_page();
     });
 </script>
 </body>
