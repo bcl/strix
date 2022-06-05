@@ -78,10 +78,7 @@ function update_events() {
     });
 }
 
-function setup_page() {
-    // Camera information will eventually be filled in by an api call
-    // And then the page will be populated
-    cameras = [["Camera1", 8081], ["Camera2", 8082], ["Camera3", 8083], ["Camera5", 8085], ["Camera4", 8084]];
+function setup_page(cameras) {
     event_offsets = new Map();
 
     // Setup the camera HTML
@@ -123,7 +120,12 @@ function setup_page() {
     setInterval(update_events, 30 * 1000);
 }
 
-setup_page();
+// First thing to do is get the list of cameras, then setup the page.
+fetch("/api/cameras/list")
+    .then(resp => resp.json())
+    .then(data => {
+        setup_page(data.cameras);
+    });
 </script>
 </body>
 </html>

@@ -33,9 +33,9 @@ TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 def timestr_to_dt(rfc_str):
     return datetime.strptime(rfc_str, TIME_FORMAT)
 
-def run_api(logging_queue, base_dir, host, port, debug):
+def run_api(logging_queue, base_dir, cameras, host, port, debug):
     log = logger.log(logging_queue)
-    log.info("Starting API", base_dir=base_dir, host=host, port=port, debug=debug)
+    log.info("Starting API", base_dir=base_dir, cameras=cameras, host=host, port=port, debug=debug)
     EventCache.logger(log)
 
     @route('/')
@@ -49,7 +49,7 @@ def run_api(logging_queue, base_dir, host, port, debug):
 
     @route('/api/cameras/list')
     def serve_cameras_list() -> Response:
-        return {"cameras": sorted([d for d in os.listdir(base_dir) if d != "queue"])}
+        return {"cameras": cameras}
 
     @route('/api/events/<cameras>')
     def serve_events(cameras):

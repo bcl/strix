@@ -41,6 +41,7 @@ def check_motion_config(config_path):
     errors = []
     base_target_dir = ""
     base_queue_dir = ""
+    cameras = []
     found_pf = False
 
     cfg = motion.config.MotionConfig(config_path)
@@ -73,6 +74,12 @@ def check_motion_config(config_path):
             elif base_target_dir != tm.group(1):
                 errors += ["All of the base paths in target_dir MUST match."]
 
+        # Gather the info about the cameras and ports
+        camera_name = c.get("camera_name", "")
+        stream_port = c.get("stream_port", 8080)
+        if camera_name:
+            cameras.append((camera_name, stream_port))
+
     if not base_target_dir:
         errors += ["Could not find a target_dir setting. The last directory must be /CameraX"]
     if not base_queue_dir:
@@ -82,7 +89,9 @@ def check_motion_config(config_path):
     if not found_pf:
         errors += ["picture_filename MUST be set to %s" % picture_filename]
 
-    return (base_target_dir, errors)
+    # Cameras are sorted by their stream_port
+    cameras = sorted(cameras, key=lambda c: c[1])
+    return (base_target_dir, cameras, errors)
 
 
 def run():
@@ -90,7 +99,7 @@ def run():
     opts = parser.parse_args()
 
     try:
-        (base_dir, errors) = check_motion_config(opts.config)
+        (base_dir, cameras, errors) = check_motion_config(opts.config)
     except Exception as e:
         errors = [str(e)]
 
@@ -141,7 +150,7 @@ def run():
     api_quit = mp.Event()
     api_thread = mp.Process(name="api-thread",
                             target=api.run_api,
-                            args=(logger_queue, base_dir, opts.host, opts.port, opts.debug))
+                            args=(logger_queue, base_dir, cameras, opts.host, opts.port, opts.debug))
     api_thread.start()
     running_threads += [(api_thread, api_quit)]
 
