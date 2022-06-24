@@ -95,7 +95,7 @@ def BestThumbnail(path):
 
 ## Handle watching the queue and dispatching movie creation and directory moving
 
-def process_event(log: structlog.BoundLogger, base_dir: str, event: str) -> None:
+def process_event(log: structlog.BoundLogger, base_dir: str, event: str, queue_tx) -> None:
     log.info(event_path=event, base_dir=base_dir)
 
     # The actual path is the event with _ replaced by /
@@ -151,13 +151,16 @@ def process_event(log: structlog.BoundLogger, base_dir: str, event: str) -> None
         first_time = first_jpg.rsplit("-", 1)[0]
         event_path_base = os.path.split(event_path)[0]
         dest_path = os.path.join(event_path_base, first_time)
-        log.info("Moved event to final location", dest_path=dest_path)
         if not os.path.exists(dest_path):
             os.rename(event_path, dest_path)
+        log.info("Moved event to final location", dest_path=dest_path)
+
+        # Tell the event thread/process about the new path
+        queue_tx.send(dest_path)
     except Exception as e:
         log.error("Moving to destination failed", event_path=event_path, exception=str(e))
 
-def monitor_queue(logging_queue, base_dir, quit, max_threads):
+def monitor_queue(logging_queue, base_dir, quit, max_threads, queue_tx):
     threads = []
     log = logger.log(logging_queue)
 
@@ -177,7 +180,7 @@ def monitor_queue(logging_queue, base_dir, quit, max_threads):
 
             os.unlink(event_file)
             event = os.path.split(event_file)[-1]
-            thread = mp.Process(target=process_event, args=(log, base_dir, event))
+            thread = mp.Process(target=process_event, args=(log, base_dir, event, queue_tx))
             threads.append(thread)
             thread.start()
 

@@ -140,9 +140,10 @@ def run():
         print("ERROR: %s does not exist. Is motion running?" % queue_path)
         return False
     queue_quit = mp.Event()
+    queue_rx, queue_tx = mp.Pipe(False)
     queue_thread = mp.Process(name="queue-thread",
                               target=queue.monitor_queue,
-                              args=(logger_queue, base_dir, queue_quit, opts.max_cores))
+                              args=(logger_queue, base_dir, queue_quit, opts.max_cores, queue_tx))
     queue_thread.start()
     running_threads += [(queue_thread, queue_quit)]
 
@@ -150,7 +151,7 @@ def run():
     api_quit = mp.Event()
     api_thread = mp.Process(name="api-thread",
                             target=api.run_api,
-                            args=(logger_queue, base_dir, cameras, opts.host, opts.port, opts.debug))
+                            args=(logger_queue, base_dir, cameras, opts.host, opts.port, opts.debug, queue_rx))
     api_thread.start()
     running_threads += [(api_thread, api_quit)]
 

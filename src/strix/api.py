@@ -16,7 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from gevent import monkey; monkey.patch_all()
 from datetime import datetime
-import multiprocessing as mp
 import os
 
 # Fix mimetypes so that it recognized m4v as video/mp4
@@ -25,18 +24,23 @@ mimetypes.add_type("video/mp4", ".m4v")
 
 from bottle import install, route, run, static_file, request, Response, JSONPlugin
 from json import dumps
+from threading import Thread
 
 from . import logger
-from .events import camera_events, EventCache
+from .events import camera_events, EventCache, queue_events
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 def timestr_to_dt(rfc_str):
     return datetime.strptime(rfc_str, TIME_FORMAT)
 
-def run_api(logging_queue, base_dir, cameras, host, port, debug):
+def run_api(logging_queue, base_dir, cameras, host, port, debug, queue_rx):
     log = logger.log(logging_queue)
     log.info("Starting API", base_dir=base_dir, cameras=cameras, host=host, port=port, debug=debug)
     EventCache.logger(log)
+
+    # Listen to queue_rx for new events
+    th = Thread(target=queue_events, args=(log, queue_rx))
+    th.start()
 
     @route('/')
     @route('/<filename>')
@@ -76,3 +80,5 @@ def run_api(logging_queue, base_dir, cameras, host, port, debug):
     # Use str as default in json dumps for objects like datetime
     install(JSONPlugin(json_dumps=lambda s: dumps(s, default=str)))
     run(host=host, port=port, debug=debug, server="gevent")
+
+    th.join(30)
