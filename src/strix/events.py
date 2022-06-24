@@ -77,6 +77,17 @@ class EventCacheClass:
             # Return True if it was added to the cache
             return key in self._cache
 
+    def events(self, camera=None, reverse=False):
+        """
+        Return a sorted list of the events
+        """
+        if not camera:
+            return sorted(self._cache.keys(), reverse=reverse)
+
+        cp = self._base_dir + "/" + camera
+        # limit results to the selected camera
+        return sorted((p for p in self._cache.keys() if p.startswith(cp)), reverse=reverse)
+
     def base_dir(self, base_dir):
         with self._lock:
             self._base_dir = base_dir
@@ -174,13 +185,17 @@ EventCache = EventCacheClass()
 
 def preload_cache(log, base_dir):
     log.info("Pre-loading event cache...")
-    start = datetime(1985, 10, 26, 1, 22, 0)
+
     total = timedelta()
     for camera in sorted(c for c in os.listdir(base_dir) if c.startswith("Camera")):
-        end = datetime.now()
-        _ = camera_events(log, base_dir, camera, start, end, 0, 0)
-        log.info(f"{camera} event cache loaded in {datetime.now()-end} seconds")
-        total += datetime.now()-end
+        start = datetime.now()
+
+        # YYYY-MM-DD/HH-MM-SS is the format of the event directories.
+        glob_path="%s/%s/????-??-??/??-??-??" % (base_dir, camera)
+        for event_path in sorted(glob(glob_path), reverse=True):
+            _ = event_details(log, event_path)
+        log.info(f"{camera} event cache loaded in {datetime.now()-start} seconds")
+        total += datetime.now()-start
     log.info(f"Event cache loaded in {total} seconds")
 
     # Next event will check for expired entries
@@ -287,14 +302,11 @@ def event_details(log, event_path):
 
 
 def camera_events(log, base_dir, camera, start, end, offset, limit):
-    # YYYY-MM-DD/HH-MM-SS is the format of the event directories.
-    glob_path="%s/%s/????-??-??/??-??-??" % (base_dir, camera)
-
     # Newest to oldest, limited by offset and limit
     skipped = 0
     added = 0
     events = []
-    for event_path in sorted(glob(glob_path), reverse=True):
+    for event_path in EventCache.events(camera=camera, reverse=True):
         dt = path_to_dt(event_path)
         if dt < start or dt > end:
             continue
@@ -311,3 +323,19 @@ def camera_events(log, base_dir, camera, start, end, offset, limit):
             break
 
     return events
+
+def queue_events(log, queue_rx):
+    """
+    Loop, reading new event paths from the Pipe (the queue mp thread is at the other end)
+    and adding their details to the EventCache
+    """
+    while True:
+        try:
+            if not queue_rx.poll(10):
+                continue
+
+            event_path = queue_rx.recv()
+        except EOFError:
+            break
+
+        _ = event_details(log, event_path)
