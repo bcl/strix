@@ -94,6 +94,11 @@ function get_all_events(camera_name) {
 }
 
 function load_viewer(event, scrollY) {
+    // Update the browser history and url with the new event
+    let params = new URLSearchParams(document.location.search);
+    params.set("event", event);
+    window.history.pushState({}, document.title, "?"+params.toString());
+
     scroll(0,0);
 
     // Set the viewere to the event video
