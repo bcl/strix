@@ -29,6 +29,9 @@ from . import logger
 
 THUMBNAIL_SIZE = (640, 480)
 
+# More than 5 minute events have a timelapse created
+TIMELAPSE_MIN = 5 * 60 * 5
+
 def max_cores() -> int:
     return max(1, mp.cpu_count() // 2)
 
@@ -118,8 +121,15 @@ def process_event(log: structlog.BoundLogger, base_dir: str, event: str, queue_t
     except Exception as e:
         log.debug("Failed to move debug images into ./debug/")
 
-    ffmpeg_cmd = ["ffmpeg", "-f", "image2", "-pattern_type", "glob", "-framerate", "5", "-i", "*.jpg",
-                  "-vf", "scale=1280:-2", "-c:v", "h264", "-b:v", "2M", "video.m4v"]
+    ffmpeg_cmd = ["ffmpeg", "-f", "image2", "-pattern_type", "glob", "-framerate", "5",
+            "-i", "*.jpg", "-vf", "scale=1280:-2"]
+
+    # Make a timelapse for events that are too long
+    if len(glob(f"{event_path}/*jpg")) > TIMELAPSE_MIN:
+        ffmpeg_cmd += ["-vf", "setpts=0.0625*PTS"]
+
+    ffmpeg_cmd += ["-c:v", "h264", "-b:v", "2M", "video.m4v"]
+    log.debug("ffmpeg cmdline", ffmpeg_cmd=ffmpeg_cmd)
 
     # Make a movie out of the jpg images with ffmpeg
     try:
