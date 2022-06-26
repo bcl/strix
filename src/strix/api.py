@@ -16,13 +16,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from gevent import monkey; monkey.patch_all()
 from datetime import datetime
+from glob import glob
 import os
 
 # Fix mimetypes so that it recognized m4v as video/mp4
 import mimetypes
 mimetypes.add_type("video/mp4", ".m4v")
 
-from bottle import install, route, run, static_file, request, Response, JSONPlugin
+from bottle import abort, install, route, run, static_file, request, Response, JSONPlugin
+from bottle import template
 from json import dumps
 from threading import Thread
 
@@ -49,7 +51,15 @@ def run_api(logging_queue, base_dir, cameras, host, port, debug, queue_rx):
 
     @route('/motion/<filepath:path>')
     def serve_motion(filepath):
-        return static_file(filepath, root=base_dir)
+        if os.path.isfile(base_dir + "/" + filepath):
+            return static_file(filepath, root=base_dir)
+
+        path = os.path.normpath(base_dir + os.path.normpath("/" + filepath))
+        if not os.path.isdir(path):
+            abort(404)
+
+        listing = sorted([os.path.basename(f) for f in glob(path + "/*.jpg")])
+        return template(os.path.dirname(__file__)+"/ui/dirlist.tmpl", listing=listing)
 
     @route('/api/cameras/list')
     def serve_cameras_list() -> Response:

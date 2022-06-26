@@ -13,7 +13,8 @@
     </div>
     <div id="days">
         <ul id="daylinks">
-            <li><a id="debugvideo" onclick="">debug</a></li>
+            <li><a id="imagelist" href="" target="_images">Images</a></li>
+            <li><a id="debugvideo" onclick="">Debug</a></li>
             <li><a id="scrollback" onclick="">Jump Back</a></li>
         </ul>
     </div>
@@ -105,6 +106,10 @@ function load_viewer(event, scrollY) {
     var viewer = document.querySelector("#viewer video");
     viewer.src = event;
     viewer.autoplay = true;
+
+    // Setup the Images link
+    var il = document.querySelector("#imagelist");
+    il.href = event.replace("video.m4v", "");
 
     // Setup the scrollback link
     var sb = document.querySelector("#scrollback");
