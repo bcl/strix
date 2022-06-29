@@ -141,7 +141,10 @@ class EventCacheClass:
         if len(remove) == 0:
             return
 
-        self.log_info(f"Removing {len(remove)} directories")
+        # The result of the above is a dict (remove) with daily lists of events to be
+        # removed. NOTE that this may not be ALL the day's events so it needs to move
+        # them individually, but needs to use the Camera and date to prevent collisions
+        # with other cameras while waiting for the delete to run in the background.
 
         # Create the temporary delete_queue directory
         delete_queue = tempfile.mkdtemp(dir=os.path.join(self._base_dir, "delete_queue"))
@@ -154,16 +157,19 @@ class EventCacheClass:
                 self.log_error(f"Camera* missing from path {daypath}")
 
             if cm and os.path.exists(daypath):
-                self.log_info("REMOVE: %s", daypath)
+                # Make a directory for the day's events
+                daydir = os.path.basename(daypath)
+                dqdir = os.path.join(delete_queue, cm.group(), daydir)
+                if not os.path.exists(dqdir):
+                    os.makedirs(dqdir)
 
-                if not os.path.exists(os.path.join(delete_queue, cm.group())):
-                    os.makedirs(os.path.join(delete_queue, cm.group()))
-
-                # Move the daily directory tree into the delete_queue/Camera* directory
-                shutil.move(daypath, os.path.join(delete_queue, cm.group()))
+                # Move the expired events into the delete_queue/Camera*/YYYY-MM-DD/ directory
+                for e in remove[daypath]:
+                    self.log_info(f"MOVE: {e} -> {dqdir}")
+                    shutil.move(e, dqdir)
 
             # Remove the events from the cache
-            self.log_info(f"Removing {len(remove[daypath])} events")
+            self.log_info(f"Removing {len(remove[daypath])} events from {daypath}")
             for e in remove[daypath]:
                 del self._cache[e]
 
