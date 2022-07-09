@@ -26,12 +26,14 @@
 var camera_events;
 
 function nice_time_string(time_str) {
-    var d = new Date(time_str);
+    var arr = time_str.split(/[- :]/);
+    var d = new Date(arr[0], arr[1]-1, arr[2], arr[3], arr[4], arr[5]);
     return nice_short_time_string(time_str) + " " + d.toLocaleTimeString();
 }
 
 function nice_short_time_string(time_str) {
-    var d = new Date(time_str);
+    var arr = time_str.split(/[- :]/);
+    var d = new Date(arr[0], arr[1]-1, arr[2], arr[3], arr[4], arr[5]);
     // DoW Mo Day Year
     var fields = d.toDateString().split(" ");
     return fields.slice(0,3).join(" ");
@@ -73,16 +75,21 @@ function get_all_events(camera_name) {
                             height=${height}
                             src="${event.thumbnail}" />`
                         // Show a day banner every time it passes midnight
-                        let od = new Date(last_start).getDay();
-                        let nd = new Date(event.start).getDay();
                         if (last_start == 0) {
                             banner = `<div class="newday" id="${event.start}"><h1 align="center">${alt}</h1>`;
                             html = banner + html;
-                        }
-                        else if (od != nd) {
-                            banner = `</div><div class="newday" id="${event.start}"><h1 align="center">${alt}</h1>`;
-                            html = banner + html;
-                            add_day(event.start);
+                        } else {
+                            var arr = last_start.split(/[- :]/);
+                            let od = new Date(arr[0], arr[1]-1, arr[2], arr[3], arr[4], arr[5]).getDay();
+
+                            var arr = event.start.split(/[- :]/);
+                            let nd = new Date(arr[0], arr[1]-1, arr[2], arr[3], arr[4], arr[5]).getDay();
+
+                            if (od != nd) {
+                                banner = `</div><div class="newday" id="${event.start}"><h1 align="center">${alt}</h1>`;
+                                html = banner + html;
+                                add_day(event.start);
+                            }
                         }
                         last_start = event.start;
                         return html;
