@@ -69,6 +69,10 @@ class EventCacheClass:
             if "end" in value and type(value["end"]) == type(""):
                 value["end"] = datetime.fromisoformat(value["end"])
 
+            # Add missing title (old cache will not have this new field)
+            if "title" not in value:
+                value["title"] = value["start"].strftime("%a %b %d %I:%M:%S %p"),
+
             self._cache[key] = value
 
             # This can potentially remove the key just added if it is an old event
@@ -289,6 +293,7 @@ def event_details(log, event_path):
     details = {
         "start":        start_time,
         "end":          end_time,
+        "title":        start_time.strftime("%a %b %d %I:%M:%S %p"),
         "video":        video[0],
         "debug_video":  video[1],
         "thumbnail":    thumbnail,

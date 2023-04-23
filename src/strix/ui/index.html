@@ -26,13 +26,6 @@ function set_feed_src() {
     });
 }
 
-function nice_time_string(time_str) {
-    var d = new Date(time_str);
-    // DoW Mo Day Year
-    var fields = d.toDateString().split(" ");
-    return fields.slice(0,3).join(" ") + " " + d.toLocaleTimeString();
-}
-
 function get_events(camera_name, offset, limit) {
     // The API returns the events with the oldest one first in the .events list
     fetch("/api/events/"+camera_name+"?offset="+offset+"&limit="+limit)
@@ -43,7 +36,7 @@ function get_events(camera_name, offset, limit) {
             videos.forEach(video => {
                 event = data.events[camera_name][idx];
                 video.href="events.html?camera="+camera_name+"&event="+event.video;
-                video.title=nice_time_string(event.start);
+                video.title=event.title;
                 img = video.firstChild;
                 img.src = event.thumbnail;
                 idx++;
