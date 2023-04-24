@@ -25,12 +25,6 @@
 <script type="text/javascript">
 var camera_events;
 
-function nice_time_string(time_str) {
-    var arr = time_str.split(/[- :]/);
-    var d = new Date(arr[0], arr[1]-1, arr[2], arr[3], arr[4], arr[5]);
-    return nice_short_time_string(time_str) + " " + d.toLocaleTimeString();
-}
-
 function nice_short_time_string(time_str) {
     var arr = time_str.split(/[- :]/);
     var d = new Date(arr[0], arr[1]-1, arr[2], arr[3], arr[4], arr[5]);
@@ -66,17 +60,16 @@ function get_all_events(camera_name) {
                 width = this.width;
                 height = this.height;
                 html = data.events[camera_name].reverse().map(event => {
-                    let alt = nice_time_string(event.start);
                     let html = `<img class="thumbnail"
                             onclick="javascript:load_viewer('${event.video}', scrollY);"
-                            title="${alt}"
+                            title="${event.title}"
                             loading="lazy"
                             width=${width}
                             height=${height}
                             src="${event.thumbnail}" />`
                         // Show a day banner every time it passes midnight
                         if (last_start == 0) {
-                            banner = `<div class="newday" id="${event.start}"><h1 align="center">${alt}</h1>`;
+                            banner = `<div class="newday" id="${event.start}"><h1 align="center">${event.title}</h1>`;
                             html = banner + html;
                         } else {
                             var arr = last_start.split(/[- :]/);
@@ -86,7 +79,7 @@ function get_all_events(camera_name) {
                             let nd = new Date(arr[0], arr[1]-1, arr[2], arr[3], arr[4], arr[5]).getDay();
 
                             if (od != nd) {
-                                banner = `</div><div class="newday" id="${event.start}"><h1 align="center">${alt}</h1>`;
+                                banner = `</div><div class="newday" id="${event.start}"><h1 align="center">${event.title}</h1>`;
                                 html = banner + html;
                                 add_day(event.start);
                             }
