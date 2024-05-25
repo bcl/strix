@@ -266,7 +266,8 @@ def event_details(log, event_path):
     if os.path.exists(event_path+"/thumbnail.jpg"):
         thumbnail = url+"/thumbnail.jpg"
     elif images:
-        thumbnail = images[len(images)//4]
+        # No thumbnail, use the 25% position image
+        thumbnail = url+"/"+images[len(images)//4]
     else:
         thumbnail = "images/missing.jpg"
 
