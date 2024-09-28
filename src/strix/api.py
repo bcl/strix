@@ -23,6 +23,7 @@ import os
 import mimetypes
 mimetypes.add_type("video/mp4", ".m4v")
 
+import bottle
 from bottle import abort, install, route, run, static_file, request, Response, JSONPlugin
 from bottle import template
 from json import dumps
@@ -30,6 +31,8 @@ from threading import Thread
 
 from . import logger
 from .events import camera_events, EventCache, queue_events
+
+bottle.TEMPLATE_PATH.insert(0, os.path.dirname(__file__)+"/ui/")
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 def timestr_to_dt(rfc_str):
@@ -59,7 +62,7 @@ def run_api(logging_queue, base_dir, cameras, host, port, debug, queue_rx):
             abort(404)
 
         listing = sorted([os.path.basename(f) for f in glob(path + "/*.jpg")])
-        return template(os.path.dirname(__file__)+"/ui/dirlist.tmpl", listing=listing)
+        return template("dirlist.tmpl", listing=listing)
 
     @route('/api/cameras/list')
     def serve_cameras_list() -> Response:
