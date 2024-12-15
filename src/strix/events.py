@@ -19,6 +19,7 @@ from glob import glob
 import json
 import multiprocessing as mp
 import os
+from pathlib import Path
 import re
 import shutil
 import tempfile
@@ -202,10 +203,27 @@ def preload_cache(log, base_dir):
 
         # YYYY-MM-DD/HH-MM-SS is the format of the event directories.
         glob_path="%s/%s/????-??-??/??-??-??" % (base_dir, camera)
-        for event_path in sorted(glob(glob_path), reverse=True):
+        all_camera_events = sorted(glob(glob_path), reverse=True)
+        for event_path in all_camera_events:
             _ = event_details(log, event_path)
         log.info(f"{camera} event cache loaded in {datetime.now()-start} seconds")
         total += datetime.now()-start
+
+        # Check for unprocessed directories that don't fit the pattern
+        # These are likely events that were never processed due to a restart
+        glob_all_path="%s/%s/????-??-??/*" % (base_dir, camera)
+        all_dirs = sorted(glob(glob_all_path), reverse=True)
+        diff_dirs = set(all_dirs) - set(all_camera_events)
+
+        # Write new queue entries for these unprocessed directories
+        # /strix/media/queue/Camera%t_%Y-%m-%d_%v
+        # Remove the base dir, Replace the / with _, and touch a file
+        for d in diff_dirs:
+            event = d.removeprefix(base_dir).lstrip("/").replace("/", "_")
+            td = Path(os.path.join(base_dir, "queue", event))
+            log.debug(f"Recreating unprocessed event - {td}")
+            td.touch()
+
     log.info(f"Event cache loaded in {total} seconds")
 
     # Next event will check for expired entries
